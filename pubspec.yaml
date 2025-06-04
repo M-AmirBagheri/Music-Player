@@ -1,0 +1,32 @@
+name: music_player_project
+description: "A Flutter music player application."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.7.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  on_audio_query: ^2.9.0
+  just_audio: ^0.9.35
+  shared_preferences: ^2.2.2
+  permission_handler: ^11.3.1
+  cupertino_icons: ^1.0.8
+  image_picker: ^1.0.4
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+
+dependency_overrides:
+  on_audio_query_android:
+    path: local_packages/on_audio_query_android
+
+flutter:
+  uses-material-design: true

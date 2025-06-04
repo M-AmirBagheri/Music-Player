@@ -1,0 +1,212 @@
+import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:on_audio_query/on_audio_query.dart';
+import '../../services/favorites_service.dart';
+
+class SongDetailPage extends StatefulWidget {
+  final SongModel song;
+  final AudioPlayer player;
+
+  const SongDetailPage({super.key, required this.song, required this.player});
+
+  @override
+  State<SongDetailPage> createState() => _SongDetailPageState();
+}
+
+class _SongDetailPageState extends State<SongDetailPage> {
+  Duration _duration = Duration.zero;
+  Duration _position = Duration.zero;
+
+  late SongModel _currentSong;
+  late Widget _artworkWidget;
+  LoopMode _loopMode = LoopMode.off;
+  bool _isShuffleModeEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentSong = widget.song;
+    _artworkWidget = _buildArtwork(_currentSong);
+
+    widget.player.currentIndexStream.listen((index) {
+      final source = widget.player.audioSource;
+      if (index != null && source is ConcatenatingAudioSource && index < source.children.length) {
+        final audioSource = source.children[index];
+        if (audioSource is UriAudioSource && audioSource.tag is SongModel) {
+          setState(() {
+            _currentSong = audioSource.tag as SongModel;
+            _artworkWidget = _buildArtwork(_currentSong);
+          });
+        }
+      }
+    });
+
+    widget.player.durationStream.listen((d) {
+      if (d != null) setState(() => _duration = d);
+    });
+
+    widget.player.positionStream.listen((p) {
+      setState(() => _position = p);
+    });
+  }
+
+  Widget _buildArtwork(SongModel song) {
+    return QueryArtworkWidget(
+      id: song.id,
+      type: ArtworkType.AUDIO,
+      artworkFit: BoxFit.cover,
+      nullArtworkWidget: Container(
+        color: Colors.grey.shade800,
+        child: const Center(
+          child: Icon(Icons.music_note, color: Colors.white, size: 100),
+        ),
+      ),
+    );
+  }
+
+  void _toggleRepeatMode() {
+    setState(() {
+      _loopMode = _loopMode == LoopMode.off ? LoopMode.one : LoopMode.off;
+      widget.player.setLoopMode(_loopMode);
+    });
+  }
+
+  void _toggleShuffleMode() async {
+    _isShuffleModeEnabled = !_isShuffleModeEnabled;
+    await widget.player.setShuffleModeEnabled(_isShuffleModeEnabled);
+    setState(() {});
+  }
+
+  void _toggleFavorite() {
+    setState(() {
+      FavoritesService.instance.toggleFavorite(_currentSong);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isFavorite = FavoritesService.instance.isFavorite(_currentSong.id);
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        leading: BackButton(color: Colors.white),
+        elevation: 0,
+        actions: const [
+          Icon(Icons.share, color: Colors.white),
+          SizedBox(width: 16),
+          Icon(Icons.equalizer, color: Colors.white),
+          SizedBox(width: 16),
+          Icon(Icons.more_vert, color: Colors.white),
+          SizedBox(width: 8),
+        ],
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              AspectRatio(aspectRatio: 1, child: _artworkWidget),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 12),
+                    Text(
+                      _currentSong.title,
+                      style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _currentSong.artist ?? 'Unknown Artist',
+                      style: const TextStyle(color: Colors.grey, fontSize: 14),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        const Icon(Icons.queue_music, color: Colors.white),
+                        IconButton(
+                          icon: Icon(
+                            isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color: isFavorite ? Colors.purpleAccent : Colors.white,
+                          ),
+                          onPressed: _toggleFavorite,
+                        ),
+                        const Icon(Icons.add, color: Colors.white),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Slider(
+                      min: 0,
+                      max: _duration.inSeconds.toDouble(),
+                      value: _position.inSeconds.clamp(0, _duration.inSeconds).toDouble(),
+                      onChanged: (value) {
+                        final newPosition = Duration(seconds: value.toInt());
+                        widget.player.seek(newPosition);
+                      },
+                      activeColor: Colors.purpleAccent,
+                      inactiveColor: Colors.white24,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(_formatDuration(_position), style: const TextStyle(color: Colors.white70)),
+                        Text(_formatDuration(_duration), style: const TextStyle(color: Colors.white70)),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.shuffle, color: _isShuffleModeEnabled ? Colors.purpleAccent : Colors.white),
+                          onPressed: _toggleShuffleMode,
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.skip_previous, color: Colors.white, size: 32),
+                          onPressed: () => widget.player.seekToPrevious(),
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            widget.player.playing ? Icons.pause_circle_filled : Icons.play_circle_filled,
+                            color: Colors.white,
+                            size: 64,
+                          ),
+                          onPressed: () {
+                            widget.player.playing ? widget.player.pause() : widget.player.play();
+                            setState(() {});
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.skip_next, color: Colors.white, size: 32),
+                          onPressed: () => widget.player.seekToNext(),
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            _loopMode == LoopMode.one ? Icons.repeat_one : Icons.repeat,
+                            color: _loopMode == LoopMode.one ? Colors.purpleAccent : Colors.white,
+                          ),
+                          onPressed: _toggleRepeatMode,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatDuration(Duration d) {
+    final minutes = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+}
