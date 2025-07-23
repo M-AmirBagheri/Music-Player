@@ -198,7 +198,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     text: const TextSpan(
                       style: TextStyle(fontFamily: 'Lato'),
                       children: [
-                        TextSpan(text: 'ARAS ', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+                        TextSpan(text: 'HICH ', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
                         TextSpan(text: 'Music', style: TextStyle(fontSize: 16, color: Colors.white)),
                       ],
                     ),
