@@ -106,7 +106,14 @@ class _SongDetailPageState extends State<SongDetailPage> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              AspectRatio(aspectRatio: 1, child: _artworkWidget),
+              SizedBox(
+                height: 250,
+                width: 250,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16), // اختیاری: برای زیبایی گوشه‌های گرد
+                  child: _artworkWidget,
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 child: Column(
