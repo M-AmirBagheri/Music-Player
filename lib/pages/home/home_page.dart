@@ -43,6 +43,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         _allSongs = songs;
       });
     });
+
+    _audioManager.player.currentIndexStream.listen((index) {
+      setState(() {}); // Refresh UI when song changes
+    });
   }
 
   List<SongModel> _getFilteredSongs() {
@@ -106,74 +110,54 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (currentSong != null)
-            Container(
-              margin: const EdgeInsets.all(9),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF9C27B0), Color(0xFF6A1B9A)],
-                  begin: Alignment.centerRight,
-                  end: Alignment.centerLeft,
-                ),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Row(
-                children: [
-                  QueryArtworkWidget(
-                    id: currentSong.id,
-                    type: ArtworkType.AUDIO,
-                    nullArtworkWidget: const Icon(Icons.music_note, color: Colors.white),
+          StreamBuilder<int?>(
+            stream: player.currentIndexStream,
+            builder: (context, snapshot) {
+              final current = _audioManager.currentSong;
+              if (current == null) return const SizedBox.shrink();
+              return Container(
+                margin: const EdgeInsets.all(9),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF9C27B0), Color(0xFF6A1B9A)],
+                    begin: Alignment.centerRight,
+                    end: Alignment.centerLeft,
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Row(
+                  children: [
+                    QueryArtworkWidget(
+                      id: current.id,
+                      type: ArtworkType.AUDIO,
+                      nullArtworkWidget: const Icon(Icons.music_note, color: Colors.white),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) => const SongDetailPage(),
-                          ),
-                        );
-                      },
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            currentSong.title,
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            currentSong.artist ?? 'Unknown Artist',
-                            style: const TextStyle(color: Colors.white70, fontSize: 12),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                          MaterialPageRoute(builder: (_) => const SongDetailPage()),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(current.title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                            Text(current.artist ?? 'Unknown Artist', style: const TextStyle(color: Colors.white70, fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.skip_previous, color: Colors.white),
-                    onPressed: () => player.seekToPrevious(),
-                  ),
-                  IconButton(
-                    icon: Icon(player.playing ? Icons.pause : Icons.play_arrow, color: Colors.white),
-                    onPressed: () {
-                      player.playing ? _audioManager.pause() : _audioManager.play();
-                      setState(() {});
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.skip_next, color: Colors.white),
-                    onPressed: () => player.seekToNext(),
-                  ),
-                ],
-              ),
-            ),
+                    IconButton(icon: const Icon(Icons.skip_previous, color: Colors.white), onPressed: () => player.seekToPrevious()),
+                    IconButton(icon: Icon(player.playing ? Icons.pause : Icons.play_arrow, color: Colors.white), onPressed: () => setState(() => player.playing ? _audioManager.pause() : _audioManager.play())),
+                    IconButton(icon: const Icon(Icons.skip_next, color: Colors.white), onPressed: () => player.seekToNext()),
+                  ],
+                ),
+              );
+            },
+          ),
           const BottomNavBar(currentIndex: 0),
         ],
       ),
@@ -196,10 +180,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   ),
                   Row(
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.search, color: Colors.white),
-                        onPressed: () => setState(() => _showSearch = !_showSearch),
-                      ),
+                      IconButton(icon: const Icon(Icons.search, color: Colors.white), onPressed: () => setState(() => _showSearch = !_showSearch)),
                       PopupMenuButton<String>(
                         icon: const Icon(Icons.more_vert, color: Colors.white),
                         onSelected: (value) {
