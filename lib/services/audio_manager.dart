@@ -2,37 +2,34 @@ import 'package:just_audio/just_audio.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 class AudioManager {
-  static final AudioManager instance = AudioManager._internal();
+  static final AudioManager instance = AudioManager._();
+  final AudioPlayer _player = AudioPlayer();
+  final ConcatenatingAudioSource _playlist = ConcatenatingAudioSource(children: []);
 
-  factory AudioManager() => instance;
+  List<SongModel> _currentPlaylist = [];
 
-  AudioManager._internal();
+  AudioManager._();
 
-  final AudioPlayer player = AudioPlayer();
-  List<SongModel> currentPlaylist = [];
+  AudioPlayer get player => _player;
+  SongModel? get currentSong => _player.sequenceState?.currentSource?.tag as SongModel?;
+  List<SongModel> get currentPlaylist => _currentPlaylist;
 
   void setPlaylist(List<SongModel> songs) {
-    currentPlaylist = songs;
+    if (_currentPlaylist == songs) return;
+    _currentPlaylist = songs;
+    _playlist.clear();
+    _playlist.addAll(
+      songs.map((s) => AudioSource.uri(Uri.parse(s.uri!), tag: s)).toList(),
+    );
+    _player.setAudioSource(_playlist);
   }
 
   Future<void> playAtIndex(int index) async {
-    final audioSources = currentPlaylist
-        .map((song) => AudioSource.uri(Uri.parse(song.uri!), tag: song))
-        .toList();
-
-    await player.setAudioSource(
-      ConcatenatingAudioSource(children: audioSources),
-      initialIndex: index,
-    );
-
-    await player.play();
-  }
-
-  SongModel? get currentSong {
-    final index = player.currentIndex;
-    if (index != null && index >= 0 && index < currentPlaylist.length) {
-      return currentPlaylist[index];
+    if (_player.audioSource != _playlist) {
+      await _player.setAudioSource(_playlist, initialIndex: index);
+    } else {
+      await _player.seek(Duration.zero, index: index);
     }
-    return null;
+    _player.play();
   }
 }
