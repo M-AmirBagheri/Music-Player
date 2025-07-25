@@ -30,15 +30,13 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() {
       _isDarkMode = value;
     });
-
-    // TODO: Connect this to real app theme logic if needed
+    
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(value ? 'Dark mode enabled' : 'Light mode enabled')),
     );
   }
 
   void _logout() {
-    // TODO: Add actual logout logic if needed
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Logged out')),
     );
