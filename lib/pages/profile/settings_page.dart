@@ -58,16 +58,6 @@ class _SettingsPageState extends State<SettingsPage> {
             secondary: const Icon(Icons.brightness_6),
           ),
           ListTile(
-            leading: const Icon(Icons.language),
-            title: const Text('Language'),
-            subtitle: const Text('Coming soon...'),
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Language feature not implemented')),
-              );
-            },
-          ),
-          ListTile(
             leading: const Icon(Icons.logout),
             title: const Text('Log Out'),
             onTap: _logout,
