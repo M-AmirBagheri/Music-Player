@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../../widgets/theme_provider.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -17,6 +19,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _loadTheme();
   }
 
+  // بارگذاری تم ذخیره‌شده
   Future<void> _loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -24,6 +27,7 @@ class _SettingsPageState extends State<SettingsPage> {
     });
   }
 
+  // تغییر وضعیت تم
   Future<void> _toggleTheme(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isDarkMode', value);
@@ -31,18 +35,22 @@ class _SettingsPageState extends State<SettingsPage> {
       _isDarkMode = value;
     });
 
-    // TODO: Connect this to real app theme logic if needed
+    // تغییر وضعیت تم در Provider
+    Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+
+    // نمایش پیام برای تغییر تم
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(value ? 'Dark mode enabled' : 'Light mode enabled')),
     );
   }
 
+  // خروج از حساب کاربری (ساده‌شده)
   void _logout() {
-    // TODO: Add actual logout logic if needed
+    // TODO: اضافه کردن منطق واقعی برای خروج از حساب کاربری
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Logged out')),
     );
-    Navigator.pop(context); // Go back
+    Navigator.pop(context); // برگشت به صفحه قبلی
   }
 
   @override
