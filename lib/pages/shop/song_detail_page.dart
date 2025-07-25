@@ -135,11 +135,11 @@ class _SongDetailPageState extends State<SongDetailPage> with SingleTickerProvid
           elevation: 0,
           actions: [
             IconButton(icon: const Icon(Icons.share, color: Colors.white), onPressed: () {}),
-            const SizedBox(width: 16),
+            const SizedBox(width: 1),
             IconButton(icon: const Icon(Icons.equalizer, color: Colors.white), onPressed: () {}),
-            const SizedBox(width: 16),
+            const SizedBox(width: 1),
             IconButton(icon: const Icon(Icons.more_vert, color: Colors.white), onPressed: () {}),
-            const SizedBox(width: 8),
+            const SizedBox(width: 1),
           ],
         ),
         body: Stack(
