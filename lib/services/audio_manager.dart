@@ -1,52 +1,61 @@
+import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
-class AudioManager {
+class AudioManager extends ChangeNotifier {
   static final AudioManager instance = AudioManager._internal();
-  late final AudioPlayer player;
+
+  final AudioPlayer player = AudioPlayer();
   List<SongModel> _playlist = [];
   SongModel? _currentSong;
-  int? _currentIndex;
 
   AudioManager._internal() {
-    player = AudioPlayer();
     player.currentIndexStream.listen((index) {
       if (index != null && index >= 0 && index < _playlist.length) {
-        _currentIndex = index;
         _currentSong = _playlist[index];
+        notifyListeners();
       }
+    });
+
+    player.playingStream.listen((_) {
+      notifyListeners();
     });
   }
 
   SongModel? get currentSong => _currentSong;
   List<SongModel> get currentPlaylist => _playlist;
 
-  Future<void> setPlaylist(List<SongModel> songs, {int initialIndex = 0}) async {
+  void setPlaylist(List<SongModel> songs) {
     _playlist = songs;
-    _currentIndex = initialIndex;
-    _currentSong = songs[initialIndex];
-    final audioSources = songs.map((s) => AudioSource.uri(Uri.parse(s.uri!), tag: s)).toList();
-    final playlist = ConcatenatingAudioSource(children: audioSources);
-    await player.setAudioSource(playlist, initialIndex: initialIndex);
+    final audioSources = songs
+        .map((s) => AudioSource.uri(Uri.parse(s.uri!), tag: s))
+        .toList();
+    player.setAudioSource(ConcatenatingAudioSource(children: audioSources));
   }
 
   Future<void> playAtIndex(int index) async {
-    if (index < 0 || index >= _playlist.length) return;
-    _currentIndex = index;
+    if (_playlist.isEmpty || index >= _playlist.length) return;
+
+    final audioSources = _playlist
+        .map((s) => AudioSource.uri(Uri.parse(s.uri!), tag: s))
+        .toList();
+
+    await player.setAudioSource(
+      ConcatenatingAudioSource(children: audioSources),
+      initialIndex: index,
+    );
     _currentSong = _playlist[index];
-    await player.seek(Duration.zero, index: index);
     await player.play();
+    notifyListeners();
   }
 
-  Future<void> play() async {
-    await player.play();
+  void play() {
+    player.play();
+    notifyListeners();
   }
 
-  Future<void> pause() async {
-    await player.pause();
-  }
-
-  void dispose() {
-    player.dispose();
+  void pause() {
+    player.pause();
+    notifyListeners();
   }
 }
