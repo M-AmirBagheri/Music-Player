@@ -1,13 +1,11 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:on_audio_query/on_audio_query.dart';
-import '../../widgets/bottom_nav_bar.dart';
-import '../profile/settings_page.dart';
-import '../profile/profile_page.dart';
-import '../home/favorites_page.dart';
-import '../shop/song_detail_page.dart';
 import '../../services/audio_manager.dart';
+import '../../widgets/bottom_nav_bar.dart';
+import '../profile/profile_page.dart';
+import '../profile/settings_page.dart';
+import '../shop/song_detail_page.dart';
+import 'favorites_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -17,14 +15,16 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
-  final OnAudioQuery _audioQuery = OnAudioQuery();
+  final _audioQuery = OnAudioQuery();
+  final _searchController = TextEditingController();
+  final _tabScrollController = ScrollController();
   final AudioManager _audioManager = AudioManager.instance;
-  late TabController _tabController;
-  final ScrollController _tabScrollController = ScrollController();
-  final TextEditingController _searchController = TextEditingController();
+
   List<SongModel> _allSongs = [];
   bool _showSearch = false;
   bool _sortByName = true;
+
+  late TabController _tabController;
 
   @override
   void initState() {
@@ -39,14 +39,23 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     _audioQuery.permissionsStatus().then((status) async {
       if (!status) await _audioQuery.permissionsRequest();
       final songs = await _audioQuery.querySongs();
-      setState(() {
-        _allSongs = songs;
-      });
+      setState(() => _allSongs = songs);
     });
 
-    _audioManager.player.currentIndexStream.listen((index) {
-      setState(() {}); // Refresh UI when song changes
-    });
+    _audioManager.addListener(_onAudioChange);
+  }
+
+  void _onAudioChange() {
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _audioManager.removeListener(_onAudioChange);
+    _tabController.dispose();
+    _searchController.dispose();
+    _tabScrollController.dispose();
+    super.dispose();
   }
 
   List<SongModel> _getFilteredSongs() {
@@ -68,36 +77,119 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       context: context,
       backgroundColor: Colors.grey.shade900,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
-      builder: (context) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: const Text("Sort by Name", style: TextStyle(color: Colors.white)),
-              onTap: () {
-                setState(() => _sortByName = true);
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              title: const Text("Sort by Time", style: TextStyle(color: Colors.white)),
-              onTap: () {
-                setState(() => _sortByName = false);
-                Navigator.pop(context);
-              },
-            ),
-          ],
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            title: const Text("Sort by Name", style: TextStyle(color: Colors.white)),
+            onTap: () {
+              setState(() => _sortByName = true);
+              Navigator.pop(context);
+            },
+          ),
+          ListTile(
+            title: const Text("Sort by Time", style: TextStyle(color: Colors.white)),
+            onTap: () {
+              setState(() => _sortByName = false);
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabs() {
+    return Stack(
+      children: [
+        Container(
+          height: 40,
+          margin: const EdgeInsets.only(left: 48),
+          child: ListView(
+            controller: _tabScrollController,
+            scrollDirection: Axis.horizontal,
+            children: List.generate(_tabController.length, (index) {
+              final isSelected = _tabController.index == index;
+              final labels = ['Local Musics', 'Downloaded', 'Favorites', 'Albums'];
+              return GestureDetector(
+                onTap: () => setState(() => _tabController.animateTo(index)),
+                child: Container(
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    labels[index],
+                    style: TextStyle(color: isSelected ? Colors.purpleAccent : Colors.grey, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ),
+        Positioned(
+          left: 0,
+          top: 2,
+          child: IconButton(icon: const Icon(Icons.unfold_more, color: Colors.white), onPressed: _showSortOptions),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSongList() {
+    final songs = _getFilteredSongs();
+    final currentSong = _audioManager.currentSong;
+
+    return ListView.separated(
+      itemCount: songs.length,
+      separatorBuilder: (context, index) => Divider(
+        color: Colors.white12,
+        indent: 72,
+        endIndent: 12,
+        height: 1,
+      ),
+      itemBuilder: (context, index) {
+        final song = songs[index];
+        final isCurrent = currentSong?.id == song.id;
+
+        return ListTile(
+          leading: QueryArtworkWidget(
+            id: song.id,
+            type: ArtworkType.AUDIO,
+            nullArtworkWidget: const Icon(Icons.music_note, color: Colors.white),
+          ),
+          title: Text(
+            song.title,
+            style: TextStyle(color: isCurrent ? Colors.purpleAccent : Colors.white, fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal),
+          ),
+          subtitle: Text(song.artist ?? 'Unknown Artist', style: const TextStyle(color: Colors.grey)),
+          onTap: () async {
+            _audioManager.setPlaylist(songs);
+            await _audioManager.playAtIndex(index);
+          },
         );
       },
     );
   }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    _searchController.dispose();
-    _tabScrollController.dispose();
-    super.dispose();
+  Widget _buildDownloadedMusics() {
+    final downloaded = List.generate(4, (i) => 'Downloaded Music ${i + 1}');
+    return ListView.builder(
+      itemCount: downloaded.length,
+      itemBuilder: (context, index) => ListTile(
+        leading: const Icon(Icons.download_done, color: Colors.white),
+        title: Text(downloaded[index], style: const TextStyle(color: Colors.white)),
+      ),
+    );
+  }
+
+  Widget _buildAlbumsList() {
+    final albums = List.generate(4, (i) => 'Album ${i + 1}');
+    return ListView.builder(
+      itemCount: albums.length,
+      itemBuilder: (context, index) => ListTile(
+        leading: const Icon(Icons.album, color: Colors.white),
+        title: Text(albums[index], style: const TextStyle(color: Colors.white)),
+      ),
+    );
   }
 
   @override
@@ -110,54 +202,72 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          StreamBuilder<int?>(
-            stream: player.currentIndexStream,
-            builder: (context, snapshot) {
-              final current = _audioManager.currentSong;
-              if (current == null) return const SizedBox.shrink();
-              return Container(
-                margin: const EdgeInsets.all(9),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF9C27B0), Color(0xFF6A1B9A)],
-                    begin: Alignment.centerRight,
-                    end: Alignment.centerLeft,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
+          if (currentSong != null)
+            Container(
+              margin: const EdgeInsets.all(9),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF9C27B0), Color(0xFF6A1B9A)],
+                  begin: Alignment.centerRight,
+                  end: Alignment.centerLeft,
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: Row(
-                  children: [
-                    QueryArtworkWidget(
-                      id: current.id,
-                      type: ArtworkType.AUDIO,
-                      nullArtworkWidget: const Icon(Icons.music_note, color: Colors.white),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => Navigator.push(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Row(
+                children: [
+                  QueryArtworkWidget(
+                    id: currentSong.id,
+                    type: ArtworkType.AUDIO,
+                    nullArtworkWidget: const Icon(Icons.music_note, color: Colors.white),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
                           context,
                           MaterialPageRoute(builder: (_) => const SongDetailPage()),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(current.title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
-                            Text(current.artist ?? 'Unknown Artist', style: const TextStyle(color: Colors.white70, fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis),
-                          ],
-                        ),
+                        );
+                      },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            currentSong.title,
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            currentSong.artist ?? 'Unknown Artist',
+                            style: const TextStyle(color: Colors.white70, fontSize: 12),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ),
-                    IconButton(icon: const Icon(Icons.skip_previous, color: Colors.white), onPressed: () => player.seekToPrevious()),
-                    IconButton(icon: Icon(player.playing ? Icons.pause : Icons.play_arrow, color: Colors.white), onPressed: () => setState(() => player.playing ? _audioManager.pause() : _audioManager.play())),
-                    IconButton(icon: const Icon(Icons.skip_next, color: Colors.white), onPressed: () => player.seekToNext()),
-                  ],
-                ),
-              );
-            },
-          ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.skip_previous, color: Colors.white),
+                    onPressed: () => player.seekToPrevious(),
+                  ),
+                  IconButton(
+                    icon: Icon(player.playing ? Icons.pause : Icons.play_arrow, color: Colors.white),
+                    onPressed: () {
+                      player.playing ? player.pause() : player.play();
+                      setState(() {});
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.skip_next, color: Colors.white),
+                    onPressed: () => player.seekToNext(),
+                  ),
+                ],
+              ),
+            ),
           const BottomNavBar(currentIndex: 0),
         ],
       ),
@@ -180,7 +290,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   ),
                   Row(
                     children: [
-                      IconButton(icon: const Icon(Icons.search, color: Colors.white), onPressed: () => setState(() => _showSearch = !_showSearch)),
+                      IconButton(
+                        icon: const Icon(Icons.search, color: Colors.white),
+                        onPressed: () => setState(() => _showSearch = !_showSearch),
+                      ),
                       PopupMenuButton<String>(
                         icon: const Icon(Icons.more_vert, color: Colors.white),
                         onSelected: (value) {
@@ -236,98 +349,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildTabs() {
-    return Stack(
-      children: [
-        Container(
-          height: 40,
-          margin: const EdgeInsets.only(left: 48),
-          child: ListView(
-            controller: _tabScrollController,
-            scrollDirection: Axis.horizontal,
-            children: List.generate(_tabController.length, (index) {
-              final isSelected = _tabController.index == index;
-              final labels = ['Local Musics', 'Downloaded', 'Favorites', 'Albums'];
-              return GestureDetector(
-                onTap: () => setState(() => _tabController.animateTo(index)),
-                child: Container(
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    labels[index],
-                    style: TextStyle(color: isSelected ? Colors.purpleAccent : Colors.grey, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
-                  ),
-                ),
-              );
-            }),
-          ),
-        ),
-        Positioned(
-          left: 0,
-          top: 2,
-          child: IconButton(icon: const Icon(Icons.unfold_more, color: Colors.white), onPressed: _showSortOptions),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSongList() {
-    final songs = _getFilteredSongs();
-    return ListView.separated(
-      itemCount: songs.length,
-      separatorBuilder: (context, index) => Divider(
-        color: Colors.white12,
-        indent: 72,
-        endIndent: 12,
-        height: 1,
-      ),
-      itemBuilder: (context, index) {
-        final song = songs[index];
-        final isCurrent = _audioManager.currentSong?.id == song.id;
-
-        return ListTile(
-          leading: QueryArtworkWidget(
-            id: song.id,
-            type: ArtworkType.AUDIO,
-            nullArtworkWidget: const Icon(Icons.music_note, color: Colors.white),
-          ),
-          title: Text(
-            song.title,
-            style: TextStyle(color: isCurrent ? Colors.purpleAccent : Colors.white, fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal),
-          ),
-          subtitle: Text(song.artist ?? 'Unknown Artist', style: const TextStyle(color: Colors.grey)),
-          onTap: () async {
-            _audioManager.setPlaylist(songs);
-            await _audioManager.playAtIndex(index);
-            setState(() {});
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildDownloadedMusics() {
-    final downloaded = List.generate(4, (i) => 'Downloaded Music ${i + 1}');
-    return ListView.builder(
-      itemCount: downloaded.length,
-      itemBuilder: (context, index) => ListTile(
-        leading: const Icon(Icons.download_done, color: Colors.white),
-        title: Text(downloaded[index], style: const TextStyle(color: Colors.white)),
-      ),
-    );
-  }
-
-  Widget _buildAlbumsList() {
-    final albums = List.generate(4, (i) => 'Album ${i + 1}');
-    return ListView.builder(
-      itemCount: albums.length,
-      itemBuilder: (context, index) => ListTile(
-        leading: const Icon(Icons.album, color: Colors.white),
-        title: Text(albums[index], style: const TextStyle(color: Colors.white)),
       ),
     );
   }

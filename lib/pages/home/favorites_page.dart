@@ -13,15 +13,18 @@ class FavoritesPage extends StatefulWidget {
 
 class _FavoritesPageState extends State<FavoritesPage> {
   final audioManager = AudioManager.instance;
-  late List<SongModel> favorites;
+  List<SongModel> favorites = [];
 
   @override
   void initState() {
     super.initState();
     favorites = FavoritesService.instance.getFavorites();
 
-    // گوش دادن به تغییر آهنگ فعلی برای به‌روزرسانی لیست
-    audioManager.player.currentIndexStream.listen((index) {
+    // Listen to song change and playback state
+    audioManager.player.currentIndexStream.listen((_) {
+      setState(() {});
+    });
+    audioManager.player.playingStream.listen((_) {
       setState(() {});
     });
   }
@@ -37,13 +40,13 @@ class _FavoritesPageState extends State<FavoritesPage> {
       );
     }
 
+    final currentSong = audioManager.currentSong;
+
     return ListView.builder(
       itemCount: favorites.length,
       itemBuilder: (context, index) {
         final song = favorites[index];
-        final isCurrent =
-            audioManager.currentSong?.id == song.id &&
-                audioManager.currentPlaylist == favorites;
+        final isCurrent = currentSong?.id == song.id;
 
         return ListTile(
           leading: QueryArtworkWidget(
@@ -66,12 +69,14 @@ class _FavoritesPageState extends State<FavoritesPage> {
             audioManager.setPlaylist(favorites);
             await audioManager.playAtIndex(index);
 
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const SongDetailPage(),
-              ),
-            );
+            if (context.mounted) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const SongDetailPage(),
+                ),
+              );
+            }
           },
         );
       },
