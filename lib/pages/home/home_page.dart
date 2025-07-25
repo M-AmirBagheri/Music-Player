@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../profile/settings_page.dart';
@@ -61,9 +63,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.grey.shade900,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       builder: (context) {
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -132,7 +132,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => SongDetailPage(song: currentSong),
+                            builder: (_) => const SongDetailPage(),
                           ),
                         );
                       },
@@ -163,7 +163,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   IconButton(
                     icon: Icon(player.playing ? Icons.pause : Icons.play_arrow, color: Colors.white),
                     onPressed: () {
-                      player.playing ? player.pause() : player.play();
+                      player.playing ? _audioManager.pause() : _audioManager.play();
                       setState(() {});
                     },
                   ),

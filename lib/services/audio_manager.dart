@@ -2,34 +2,51 @@ import 'package:just_audio/just_audio.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 class AudioManager {
-  static final AudioManager instance = AudioManager._();
-  final AudioPlayer _player = AudioPlayer();
-  final ConcatenatingAudioSource _playlist = ConcatenatingAudioSource(children: []);
+  static final AudioManager instance = AudioManager._internal();
+  late final AudioPlayer player;
+  List<SongModel> _playlist = [];
+  SongModel? _currentSong;
+  int? _currentIndex;
 
-  List<SongModel> _currentPlaylist = [];
+  AudioManager._internal() {
+    player = AudioPlayer();
+    player.currentIndexStream.listen((index) {
+      if (index != null && index >= 0 && index < _playlist.length) {
+        _currentIndex = index;
+        _currentSong = _playlist[index];
+      }
+    });
+  }
 
-  AudioManager._();
+  SongModel? get currentSong => _currentSong;
+  List<SongModel> get currentPlaylist => _playlist;
 
-  AudioPlayer get player => _player;
-  SongModel? get currentSong => _player.sequenceState?.currentSource?.tag as SongModel?;
-  List<SongModel> get currentPlaylist => _currentPlaylist;
-
-  void setPlaylist(List<SongModel> songs) {
-    if (_currentPlaylist == songs) return;
-    _currentPlaylist = songs;
-    _playlist.clear();
-    _playlist.addAll(
-      songs.map((s) => AudioSource.uri(Uri.parse(s.uri!), tag: s)).toList(),
-    );
-    _player.setAudioSource(_playlist);
+  Future<void> setPlaylist(List<SongModel> songs, {int initialIndex = 0}) async {
+    _playlist = songs;
+    _currentIndex = initialIndex;
+    _currentSong = songs[initialIndex];
+    final audioSources = songs.map((s) => AudioSource.uri(Uri.parse(s.uri!), tag: s)).toList();
+    final playlist = ConcatenatingAudioSource(children: audioSources);
+    await player.setAudioSource(playlist, initialIndex: initialIndex);
   }
 
   Future<void> playAtIndex(int index) async {
-    if (_player.audioSource != _playlist) {
-      await _player.setAudioSource(_playlist, initialIndex: index);
-    } else {
-      await _player.seek(Duration.zero, index: index);
-    }
-    _player.play();
+    if (index < 0 || index >= _playlist.length) return;
+    _currentIndex = index;
+    _currentSong = _playlist[index];
+    await player.seek(Duration.zero, index: index);
+    await player.play();
+  }
+
+  Future<void> play() async {
+    await player.play();
+  }
+
+  Future<void> pause() async {
+    await player.pause();
+  }
+
+  void dispose() {
+    player.dispose();
   }
 }

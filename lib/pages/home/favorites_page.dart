@@ -25,9 +25,7 @@ class FavoritesPage extends StatelessWidget {
       itemCount: favorites.length,
       itemBuilder: (context, index) {
         final song = favorites[index];
-        final isCurrent =
-            audioManager.currentSong?.id == song.id &&
-                audioManager.currentPlaylist == favorites;
+        final isCurrent = audioManager.currentSong?.id == song.id;
 
         return ListTile(
           leading: QueryArtworkWidget(
@@ -49,13 +47,13 @@ class FavoritesPage extends StatelessWidget {
             style: const TextStyle(color: Colors.grey),
           ),
           onTap: () async {
-            audioManager.setPlaylist(favorites);
-            await audioManager.playAtIndex(index);
+            await audioManager.setPlaylist(favorites, initialIndex: index);
+            await audioManager.play();
 
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => SongDetailPage(song: song),
+                builder: (_) => const SongDetailPage(),
               ),
             );
           },
