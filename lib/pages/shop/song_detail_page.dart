@@ -1,21 +1,22 @@
+import 'package:just_audio/just_audio.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import '../../services/favorites_service.dart';
+import '../../services/audio_manager.dart';
 
 class SongDetailPage extends StatefulWidget {
   final SongModel song;
-  final AudioPlayer player;
 
-  const SongDetailPage({super.key, required this.song, required this.player});
+  const SongDetailPage({super.key, required this.song});
 
   @override
   State<SongDetailPage> createState() => _SongDetailPageState();
 }
 
 class _SongDetailPageState extends State<SongDetailPage> with SingleTickerProviderStateMixin {
+  final audioManager = AudioManager.instance;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
   late SongModel _currentSong;
@@ -32,8 +33,8 @@ class _SongDetailPageState extends State<SongDetailPage> with SingleTickerProvid
     _currentSong = widget.song;
     _artworkWidget = _buildArtwork(_currentSong);
 
-    widget.player.currentIndexStream.listen((index) {
-      final source = widget.player.audioSource;
+    audioManager.player.currentIndexStream.listen((index) {
+      final source = audioManager.player.audioSource;
       if (index != null && source is ConcatenatingAudioSource && index < source.children.length) {
         final audioSource = source.children[index];
         if (audioSource is UriAudioSource && audioSource.tag is SongModel) {
@@ -45,11 +46,11 @@ class _SongDetailPageState extends State<SongDetailPage> with SingleTickerProvid
       }
     });
 
-    widget.player.durationStream.listen((d) {
+    audioManager.player.durationStream.listen((d) {
       if (d != null) setState(() => _duration = d);
     });
 
-    widget.player.positionStream.listen((p) {
+    audioManager.player.positionStream.listen((p) {
       setState(() => _position = p);
     });
 
@@ -97,13 +98,13 @@ class _SongDetailPageState extends State<SongDetailPage> with SingleTickerProvid
   void _toggleRepeatMode() {
     setState(() {
       _loopMode = _loopMode == LoopMode.off ? LoopMode.one : LoopMode.off;
-      widget.player.setLoopMode(_loopMode);
+      audioManager.player.setLoopMode(_loopMode);
     });
   }
 
   void _toggleShuffleMode() async {
     _isShuffleModeEnabled = !_isShuffleModeEnabled;
-    await widget.player.setShuffleModeEnabled(_isShuffleModeEnabled);
+    await audioManager.player.setShuffleModeEnabled(_isShuffleModeEnabled);
     setState(() {});
   }
 
@@ -229,7 +230,7 @@ class _SongDetailPageState extends State<SongDetailPage> with SingleTickerProvid
                       value: _position.inSeconds.clamp(0, _duration.inSeconds).toDouble(),
                       onChanged: (value) {
                         final newPosition = Duration(seconds: value.toInt());
-                        widget.player.seek(newPosition);
+                        audioManager.player.seek(newPosition);
                       },
                       activeColor: Colors.purpleAccent,
                       inactiveColor: Colors.white24,
@@ -251,22 +252,22 @@ class _SongDetailPageState extends State<SongDetailPage> with SingleTickerProvid
                         ),
                         IconButton(
                           icon: const Icon(Icons.skip_previous, color: Colors.white, size: 32),
-                          onPressed: () => widget.player.seekToPrevious(),
+                          onPressed: () => audioManager.player.seekToPrevious(),
                         ),
                         IconButton(
                           icon: Icon(
-                            widget.player.playing ? Icons.pause_circle_filled : Icons.play_circle_filled,
+                            audioManager.player.playing ? Icons.pause_circle_filled : Icons.play_circle_filled,
                             color: Colors.white,
                             size: 64,
                           ),
                           onPressed: () {
-                            widget.player.playing ? widget.player.pause() : widget.player.play();
+                            audioManager.player.playing ? audioManager.player.pause() : audioManager.player.play();
                             setState(() {});
                           },
                         ),
                         IconButton(
                           icon: const Icon(Icons.skip_next, color: Colors.white, size: 32),
-                          onPressed: () => widget.player.seekToNext(),
+                          onPressed: () => audioManager.player.seekToNext(),
                         ),
                         IconButton(
                           icon: Icon(

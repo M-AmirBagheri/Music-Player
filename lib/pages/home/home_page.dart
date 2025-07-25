@@ -1,8 +1,7 @@
-
 import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:on_audio_query/on_audio_query.dart';
-
+import '../../services/audio_manager.dart';
+import '../../services/favorites_service.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../profile/settings_page.dart';
 import '../profile/profile_page.dart';
@@ -18,8 +17,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
   final OnAudioQuery _audioQuery = OnAudioQuery();
-  final AudioPlayer _audioPlayer = AudioPlayer();
-  final ConcatenatingAudioSource _playlist = ConcatenatingAudioSource(children: []);
+  final audioManager = AudioManager.instance;
   late TabController _tabController;
   final ScrollController _tabScrollController = ScrollController();
   bool _showSearch = false;
@@ -47,11 +45,14 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       });
     });
 
-    _audioPlayer.currentIndexStream.listen((index) {
-      if (index != null && index < _allSongs.length) {
-        setState(() {
-          _currentSong = _allSongs[index];
-        });
+    audioManager.player.currentIndexStream.listen((index) {
+      if (index != null) {
+        final current = audioManager.getCurrentSong();
+        if (current != null) {
+          setState(() {
+            _currentSong = current;
+          });
+        }
       }
     });
   }
@@ -102,7 +103,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   @override
   void dispose() {
     _tabController.dispose();
-    _audioPlayer.dispose();
     _searchController.dispose();
     _tabScrollController.dispose();
     super.dispose();
@@ -141,7 +141,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => SongDetailPage(song: _currentSong!, player: _audioPlayer),
+                            builder: (_) => SongDetailPage(song: _currentSong!),
                           ),
                         );
                       },
@@ -167,18 +167,18 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   ),
                   IconButton(
                     icon: const Icon(Icons.skip_previous, color: Colors.white),
-                    onPressed: () => _audioPlayer.seekToPrevious(),
+                    onPressed: () => audioManager.player.seekToPrevious(),
                   ),
                   IconButton(
-                    icon: Icon(_audioPlayer.playing ? Icons.pause : Icons.play_arrow, color: Colors.white),
+                    icon: Icon(audioManager.player.playing ? Icons.pause : Icons.play_arrow, color: Colors.white),
                     onPressed: () {
-                      _audioPlayer.playing ? _audioPlayer.pause() : _audioPlayer.play();
+                      audioManager.player.playing ? audioManager.player.pause() : audioManager.player.play();
                       setState(() {});
                     },
                   ),
                   IconButton(
                     icon: const Icon(Icons.skip_next, color: Colors.white),
-                    onPressed: () => _audioPlayer.seekToNext(),
+                    onPressed: () => audioManager.player.seekToNext(),
                   ),
                 ],
               ),
@@ -287,7 +287,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   children: [
                     _buildSongList(),
                     _buildDownloadedMusics(),
-                    const FavoritesPage(),
+                    FavoritesPage(audioManager: audioManager),
                     _buildAlbumsList(),
                   ],
                 ),
@@ -311,7 +311,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       ),
       itemBuilder: (context, index) {
         final song = songs[index];
-        final isCurrent = _currentSong?.id == song.id;
+        final isCurrent = audioManager.getCurrentSong()?.id == song.id;
 
         return ListTile(
           leading: QueryArtworkWidget(
@@ -325,10 +325,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           ),
           subtitle: Text(song.artist ?? 'Unknown Artist', style: const TextStyle(color: Colors.grey)),
           onTap: () async {
-            _playlist.clear();
-            _playlist.addAll(_getFilteredSongs().map((s) => AudioSource.uri(Uri.parse(s.uri!), tag: s)).toList());
-            await _audioPlayer.setAudioSource(_playlist, initialIndex: index);
-            _audioPlayer.play();
+            audioManager.setPlaylist(songs);
+            await audioManager.playAtIndex(index);
             setState(() {
               _currentSong = song;
             });
