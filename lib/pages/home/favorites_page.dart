@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:on_audio_query/on_audio_query.dart';
-import '../../services/favorites_service.dart';
 import '../../services/audio_manager.dart';
-import '../shop/song_detail_page.dart';
+import '../../services/favorites_service.dart';
 
 class FavoritesPage extends StatefulWidget {
   const FavoritesPage({super.key});
@@ -12,71 +11,58 @@ class FavoritesPage extends StatefulWidget {
 }
 
 class _FavoritesPageState extends State<FavoritesPage> {
-  final audioManager = AudioManager.instance;
-  List<SongModel> favorites = [];
-
-  @override
-  void initState() {
-    super.initState();
-    favorites = FavoritesService.instance.getFavorites();
-
-    // Listen to song change and playback state
-    audioManager.player.currentIndexStream.listen((_) {
-      setState(() {});
-    });
-    audioManager.player.playingStream.listen((_) {
-      setState(() {});
-    });
-  }
+  final AudioManager _audioManager = AudioManager.instance;
 
   @override
   Widget build(BuildContext context) {
-    if (favorites.isEmpty) {
-      return const Center(
-        child: Text(
-          'No favorite songs yet.',
-          style: TextStyle(color: Colors.white),
-        ),
-      );
+    final favoriteSongs = FavoritesService.instance.getFavorites();
+    final currentSong = _audioManager.currentSong;
+
+    if (favoriteSongs.isEmpty) {
+      return const Center(child: Text('No favorites yet.'));
     }
 
-    final currentSong = audioManager.currentSong;
-
-    return ListView.builder(
-      itemCount: favorites.length,
+    return ListView.separated(
+      itemCount: favoriteSongs.length,
+      separatorBuilder: (context, index) => Divider(
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.white.withOpacity(0.1)
+            : Colors.grey.shade400,
+        indent: 72,
+        endIndent: 12,
+        height: 1,
+      ),
       itemBuilder: (context, index) {
-        final song = favorites[index];
+        final song = favoriteSongs[index];
         final isCurrent = currentSong?.id == song.id;
 
         return ListTile(
           leading: QueryArtworkWidget(
             id: song.id,
             type: ArtworkType.AUDIO,
-            nullArtworkWidget: const Icon(Icons.music_note, color: Colors.white),
+            nullArtworkWidget: const Icon(Icons.music_note),
           ),
           title: Text(
             song.title,
             style: TextStyle(
-              color: isCurrent ? Colors.purpleAccent : Colors.white,
+              color: isCurrent
+                  ? Theme.of(context).colorScheme.secondary
+                  : Theme.of(context).textTheme.bodyLarge!.color,
               fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
             ),
           ),
           subtitle: Text(
             song.artist ?? 'Unknown Artist',
-            style: const TextStyle(color: Colors.grey),
+            style: TextStyle(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white.withOpacity(0.5)
+                  : Colors.black.withOpacity(0.6),
+            ),
           ),
           onTap: () async {
-            audioManager.setPlaylist(favorites);
-            await audioManager.playAtIndex(index);
-
-            if (context.mounted) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const SongDetailPage(),
-                ),
-              );
-            }
+            _audioManager.setPlaylist(favoriteSongs);
+            await _audioManager.playAtIndex(index);
+            setState(() {});
           },
         );
       },

@@ -141,33 +141,54 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     final songs = _getFilteredSongs();
     final currentSong = _audioManager.currentSong;
 
-    return ListView.separated(
-      itemCount: songs.length,
-      separatorBuilder: (context, index) => const Divider(indent: 72, endIndent: 12, height: 1),
-      itemBuilder: (context, index) {
-        final song = songs[index];
-        final isCurrent = currentSong?.id == song.id;
+    return Container(
+      color: Theme.of(context).brightness == Brightness.dark
+          ? Colors.grey.shade900.withOpacity(0.5)
+          : Colors.white,
+      child: ListView.separated(
+        itemCount: songs.length,
+        separatorBuilder: (context, index) => Divider(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Colors.white.withOpacity(0.1)
+              : Colors.grey.shade400,
+          indent: 72,
+          endIndent: 12,
+          height: 1,
+        ),
+        itemBuilder: (context, index) {
+          final song = songs[index];
+          final isCurrent = currentSong?.id == song.id;
 
-        return ListTile(
-          leading: QueryArtworkWidget(
-            id: song.id,
-            type: ArtworkType.AUDIO,
-            nullArtworkWidget: const Icon(Icons.music_note),
-          ),
-          title: Text(
-            song.title,
-            style: TextStyle(
-              color: isCurrent ? Theme.of(context).colorScheme.secondary : Theme.of(context).textTheme.bodyLarge!.color,
-              fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+          return ListTile(
+            leading: QueryArtworkWidget(
+              id: song.id,
+              type: ArtworkType.AUDIO,
+              nullArtworkWidget: const Icon(Icons.music_note),
             ),
-          ),
-          subtitle: Text(song.artist ?? 'Unknown Artist'),
-          onTap: () async {
-            _audioManager.setPlaylist(songs);
-            await _audioManager.playAtIndex(index);
-          },
-        );
-      },
+            title: Text(
+              song.title,
+              style: TextStyle(
+                color: isCurrent
+                    ? Theme.of(context).colorScheme.secondary
+                    : Theme.of(context).textTheme.bodyLarge!.color,
+                fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+            subtitle: Text(
+              song.artist ?? 'Unknown Artist',
+              style: TextStyle(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white.withOpacity(0.5)
+                    : Colors.black.withOpacity(0.6),
+              ),
+            ),
+            onTap: () async {
+              _audioManager.setPlaylist(songs);
+              await _audioManager.playAtIndex(index);
+            },
+          );
+        },
+      ),
     );
   }
 
@@ -199,6 +220,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     final player = _audioManager.player;
 
     return Scaffold(
+      backgroundColor: Theme.of(context).brightness == Brightness.light ? Colors.grey[100] : null,
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -329,7 +351,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     hintText: 'Search music...',
                     prefixIcon: const Icon(Icons.search),
                     filled: true,
-                    fillColor: Theme.of(context).colorScheme.surface,
+                    fillColor: Theme.of(context).brightness == Brightness.dark
+                        ? Theme.of(context).colorScheme.surface
+                        : Colors.white,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                   ),
                 ),
@@ -340,7 +364,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 margin: const EdgeInsets.only(top: 10),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
+                  color: Theme.of(context).brightness == Brightness.light ? Colors.white : Theme.of(context).colorScheme.surface,
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                 ),
                 child: TabBarView(

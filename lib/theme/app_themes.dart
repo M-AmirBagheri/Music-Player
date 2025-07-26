@@ -1,29 +1,41 @@
 import 'package:flutter/material.dart';
 
 class AppThemes {
-  static final ThemeData darkTheme = ThemeData.dark().copyWith(
+  static final ThemeData darkTheme = ThemeData(
+    brightness: Brightness.dark,
     scaffoldBackgroundColor: Colors.black,
-    primaryColor: Colors.purple,
     colorScheme: const ColorScheme.dark(
-      primary: Colors.purple,
+      primary: Colors.deepPurple,
       secondary: Colors.purpleAccent,
     ),
-    appBarTheme: const AppBarTheme(
+    unselectedWidgetColor: Colors.grey,
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
       backgroundColor: Colors.black,
-      foregroundColor: Colors.white,
+      selectedItemColor: Colors.purpleAccent,
+      unselectedItemColor: Colors.grey,
+    ),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
     ),
   );
 
-  static final ThemeData lightTheme = ThemeData.light().copyWith(
+  static final ThemeData lightTheme = ThemeData(
+    brightness: Brightness.light,
     scaffoldBackgroundColor: Colors.white,
-    primaryColor: Colors.purple,
     colorScheme: const ColorScheme.light(
-      primary: Colors.purple,
-      secondary: Colors.purpleAccent,
+      primary: Colors.deepPurple,
+      secondary: Colors.purple,
+    ),
+    unselectedWidgetColor: Colors.grey,
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      backgroundColor: Colors.white,
+      selectedItemColor: Colors.purple,
+      unselectedItemColor: Colors.grey,
     ),
     appBarTheme: const AppBarTheme(
-      backgroundColor: Colors.white,
-      foregroundColor: Colors.black,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
     ),
   );
 }

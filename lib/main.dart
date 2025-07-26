@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import '../../widgets/theme_provider.dart';
 import 'pages/home/home_page.dart';
+import 'widgets/theme_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       systemNavigationBarColor: Colors.transparent,
@@ -19,7 +20,7 @@ void main() {
 
   runApp(
     ChangeNotifierProvider(
-      create: (context) => ThemeProvider(ThemeData.dark())..loadTheme(),
+      create: (_) => ThemeProvider()..loadTheme(),
       child: const MyApp(),
     ),
   );
@@ -31,11 +32,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
+      builder: (context, themeProvider, _) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'HICH Music',
-          theme: themeProvider.themeData,
+          theme: themeProvider.light,
+          darkTheme: themeProvider.dark,
+          themeMode: themeProvider.currentTheme,
           home: const HomePage(),
         );
       },
