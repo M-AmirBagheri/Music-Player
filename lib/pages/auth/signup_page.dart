@@ -44,7 +44,7 @@ class _SignUpPageState extends State<SignUpPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign Up', style: TextStyle(fontWeight: FontWeight.bold),)),
+      appBar: AppBar(title: const Text('Sign Up')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -100,7 +100,9 @@ class _SignUpPageState extends State<SignUpPage> {
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: _signUp,
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.purpleAccent),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.secondary,
+                ),
                 child: const Text('Sign Up'),
               ),
               TextButton(

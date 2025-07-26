@@ -81,9 +81,9 @@ class _SongDetailPageState extends State<SongDetailPage> with SingleTickerProvid
       type: ArtworkType.AUDIO,
       artworkFit: BoxFit.cover,
       nullArtworkWidget: Container(
-        color: Colors.grey.shade800,
+        color: Theme.of(context).colorScheme.surface,
         child: const Center(
-          child: Icon(Icons.music_note, color: Colors.white, size: 100),
+          child: Icon(Icons.music_note, size: 100),
         ),
       ),
     );
@@ -126,15 +126,12 @@ class _SongDetailPageState extends State<SongDetailPage> with SingleTickerProvid
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
-          leading: BackButton(color: Colors.white),
+          leading: BackButton(color: Theme.of(context).iconTheme.color),
           elevation: 0,
           actions: [
-            IconButton(icon: const Icon(Icons.share, color: Colors.white), onPressed: () {}),
-            const SizedBox(width: 1),
-            IconButton(icon: const Icon(Icons.equalizer, color: Colors.white), onPressed: () {}),
-            const SizedBox(width: 1),
-            IconButton(icon: const Icon(Icons.more_vert, color: Colors.white), onPressed: () {}),
-            const SizedBox(width: 1),
+            IconButton(icon: const Icon(Icons.share), onPressed: () {}),
+            IconButton(icon: const Icon(Icons.equalizer), onPressed: () {}),
+            IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
           ],
         ),
         body: Stack(
@@ -142,13 +139,13 @@ class _SongDetailPageState extends State<SongDetailPage> with SingleTickerProvid
             Container(
               height: double.infinity,
               width: double.infinity,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black,
-                    Color(0xFF121212),
+                    Theme.of(context).colorScheme.background,
+                    Theme.of(context).colorScheme.surface,
                   ],
                 ),
               ),
@@ -166,8 +163,8 @@ class _SongDetailPageState extends State<SongDetailPage> with SingleTickerProvid
                       colors: [
                         Colors.transparent,
                         Color.lerp(
-                          const Color(0xFF7F00FF).withOpacity(0.08),
-                          const Color(0xFF4A00E0).withOpacity(0.12),
+                          Theme.of(context).colorScheme.secondary.withOpacity(0.08),
+                          Theme.of(context).colorScheme.primary.withOpacity(0.12),
                           _gradientAnimation.value,
                         )!,
                       ],
@@ -192,13 +189,13 @@ class _SongDetailPageState extends State<SongDetailPage> with SingleTickerProvid
                     const SizedBox(height: 20),
                     Text(
                       _currentSong.title,
-                      style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                      style: Theme.of(context).textTheme.titleLarge,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       _currentSong.artist ?? 'Unknown Artist',
-                      style: const TextStyle(color: Colors.grey, fontSize: 14),
+                      style: Theme.of(context).textTheme.bodyMedium,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 20),
@@ -206,15 +203,15 @@ class _SongDetailPageState extends State<SongDetailPage> with SingleTickerProvid
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        const Icon(Icons.queue_music, color: Colors.white),
+                        const Icon(Icons.queue_music),
                         IconButton(
                           icon: Icon(
                             isFavorite ? Icons.favorite : Icons.favorite_border,
-                            color: isFavorite ? Colors.purpleAccent : Colors.white,
+                            color: isFavorite ? Theme.of(context).colorScheme.secondary : null,
                           ),
                           onPressed: _toggleFavorite,
                         ),
-                        const Icon(Icons.add, color: Colors.white),
+                        const Icon(Icons.add),
                       ],
                     ),
                     const SizedBox(height: 20),
@@ -226,14 +223,14 @@ class _SongDetailPageState extends State<SongDetailPage> with SingleTickerProvid
                         final newPosition = Duration(seconds: value.toInt());
                         _audioManager.player.seek(newPosition);
                       },
-                      activeColor: Colors.purpleAccent,
-                      inactiveColor: Colors.white24,
+                      activeColor: Theme.of(context).colorScheme.secondary,
+                      inactiveColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(_formatDuration(_position), style: const TextStyle(color: Colors.white70)),
-                        Text(_formatDuration(_duration), style: const TextStyle(color: Colors.white70)),
+                        Text(_formatDuration(_position), style: Theme.of(context).textTheme.bodySmall),
+                        Text(_formatDuration(_duration), style: Theme.of(context).textTheme.bodySmall),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -241,17 +238,16 @@ class _SongDetailPageState extends State<SongDetailPage> with SingleTickerProvid
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
                         IconButton(
-                          icon: Icon(Icons.shuffle, color: _isShuffleModeEnabled ? Colors.purpleAccent : Colors.white),
+                          icon: Icon(Icons.shuffle, color: _isShuffleModeEnabled ? Theme.of(context).colorScheme.secondary : null),
                           onPressed: _toggleShuffleMode,
                         ),
                         IconButton(
-                          icon: const Icon(Icons.skip_previous, color: Colors.white, size: 32),
+                          icon: const Icon(Icons.skip_previous, size: 32),
                           onPressed: () => _audioManager.player.seekToPrevious(),
                         ),
                         IconButton(
                           icon: Icon(
                             _audioManager.player.playing ? Icons.pause_circle_filled : Icons.play_circle_filled,
-                            color: Colors.white,
                             size: 64,
                           ),
                           onPressed: () {
@@ -260,13 +256,13 @@ class _SongDetailPageState extends State<SongDetailPage> with SingleTickerProvid
                           },
                         ),
                         IconButton(
-                          icon: const Icon(Icons.skip_next, color: Colors.white, size: 32),
+                          icon: const Icon(Icons.skip_next, size: 32),
                           onPressed: () => _audioManager.player.seekToNext(),
                         ),
                         IconButton(
                           icon: Icon(
                             _loopMode == LoopMode.one ? Icons.repeat_one : Icons.repeat,
-                            color: _loopMode == LoopMode.one ? Colors.purpleAccent : Colors.white,
+                            color: _loopMode == LoopMode.one ? Theme.of(context).colorScheme.secondary : null,
                           ),
                           onPressed: _toggleRepeatMode,
                         ),

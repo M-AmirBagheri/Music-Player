@@ -75,20 +75,20 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   void _showSortOptions() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.grey.shade900,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       builder: (context) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           ListTile(
-            title: const Text("Sort by Name", style: TextStyle(color: Colors.white)),
+            title: const Text("Sort by Name"),
             onTap: () {
               setState(() => _sortByName = true);
               Navigator.pop(context);
             },
           ),
           ListTile(
-            title: const Text("Sort by Time", style: TextStyle(color: Colors.white)),
+            title: const Text("Sort by Time"),
             onTap: () {
               setState(() => _sortByName = false);
               Navigator.pop(context);
@@ -118,7 +118,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
                     labels[index],
-                    style: TextStyle(color: isSelected ? Colors.purpleAccent : Colors.grey, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
+                    style: TextStyle(
+                      color: isSelected ? Theme.of(context).colorScheme.secondary : Colors.grey,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
                   ),
                 ),
               );
@@ -128,7 +131,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         Positioned(
           left: 0,
           top: 2,
-          child: IconButton(icon: const Icon(Icons.unfold_more, color: Colors.white), onPressed: _showSortOptions),
+          child: IconButton(icon: const Icon(Icons.unfold_more), onPressed: _showSortOptions),
         ),
       ],
     );
@@ -140,12 +143,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
     return ListView.separated(
       itemCount: songs.length,
-      separatorBuilder: (context, index) => Divider(
-        color: Colors.white12,
-        indent: 72,
-        endIndent: 12,
-        height: 1,
-      ),
+      separatorBuilder: (context, index) => const Divider(indent: 72, endIndent: 12, height: 1),
       itemBuilder: (context, index) {
         final song = songs[index];
         final isCurrent = currentSong?.id == song.id;
@@ -154,13 +152,16 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           leading: QueryArtworkWidget(
             id: song.id,
             type: ArtworkType.AUDIO,
-            nullArtworkWidget: const Icon(Icons.music_note, color: Colors.white),
+            nullArtworkWidget: const Icon(Icons.music_note),
           ),
           title: Text(
             song.title,
-            style: TextStyle(color: isCurrent ? Colors.purpleAccent : Colors.white, fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal),
+            style: TextStyle(
+              color: isCurrent ? Theme.of(context).colorScheme.secondary : Theme.of(context).textTheme.bodyLarge!.color,
+              fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+            ),
           ),
-          subtitle: Text(song.artist ?? 'Unknown Artist', style: const TextStyle(color: Colors.grey)),
+          subtitle: Text(song.artist ?? 'Unknown Artist'),
           onTap: () async {
             _audioManager.setPlaylist(songs);
             await _audioManager.playAtIndex(index);
@@ -175,8 +176,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     return ListView.builder(
       itemCount: downloaded.length,
       itemBuilder: (context, index) => ListTile(
-        leading: const Icon(Icons.download_done, color: Colors.white),
-        title: Text(downloaded[index], style: const TextStyle(color: Colors.white)),
+        leading: const Icon(Icons.download_done),
+        title: Text(downloaded[index]),
       ),
     );
   }
@@ -186,8 +187,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     return ListView.builder(
       itemCount: albums.length,
       itemBuilder: (context, index) => ListTile(
-        leading: const Icon(Icons.album, color: Colors.white),
-        title: Text(albums[index], style: const TextStyle(color: Colors.white)),
+        leading: const Icon(Icons.album),
+        title: Text(albums[index]),
       ),
     );
   }
@@ -198,7 +199,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     final player = _audioManager.player;
 
     return Scaffold(
-      backgroundColor: Colors.black,
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -219,7 +219,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   QueryArtworkWidget(
                     id: currentSong.id,
                     type: ArtworkType.AUDIO,
-                    nullArtworkWidget: const Icon(Icons.music_note, color: Colors.white),
+                    nullArtworkWidget: const Icon(Icons.music_note),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -236,13 +236,13 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                         children: [
                           Text(
                             currentSong.title,
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
                             currentSong.artist ?? 'Unknown Artist',
-                            style: const TextStyle(color: Colors.white70, fontSize: 12),
+                            style: const TextStyle(fontSize: 12),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -251,18 +251,18 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.skip_previous, color: Colors.white),
+                    icon: const Icon(Icons.skip_previous),
                     onPressed: () => player.seekToPrevious(),
                   ),
                   IconButton(
-                    icon: Icon(player.playing ? Icons.pause : Icons.play_arrow, color: Colors.white),
+                    icon: Icon(player.playing ? Icons.pause : Icons.play_arrow),
                     onPressed: () {
                       player.playing ? player.pause() : player.play();
                       setState(() {});
                     },
                   ),
                   IconButton(
-                    icon: const Icon(Icons.skip_next, color: Colors.white),
+                    icon: const Icon(Icons.skip_next),
                     onPressed: () => player.seekToNext(),
                   ),
                 ],
@@ -280,22 +280,28 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   RichText(
-                    text: const TextSpan(
-                      style: TextStyle(fontFamily: 'Lato'),
-                      children: [
-                        TextSpan(text: 'HICH ', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-                        TextSpan(text: 'Music', style: TextStyle(fontSize: 16, color: Colors.white)),
+                    text: TextSpan(
+                      style: Theme.of(context).textTheme.bodyLarge,
+                      children: const [
+                        TextSpan(
+                          text: 'HICH ',
+                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                        ),
+                        TextSpan(
+                          text: 'Music',
+                          style: TextStyle(fontSize: 16),
+                        ),
                       ],
                     ),
                   ),
                   Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.search, color: Colors.white),
+                        icon: const Icon(Icons.search),
                         onPressed: () => setState(() => _showSearch = !_showSearch),
                       ),
                       PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert, color: Colors.white),
+                        icon: const Icon(Icons.more_vert),
                         onSelected: (value) {
                           if (value == 'settings') {
                             Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsPage()));
@@ -319,13 +325,11 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 child: TextField(
                   controller: _searchController,
                   onChanged: (_) => setState(() {}),
-                  style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     hintText: 'Search music...',
-                    hintStyle: const TextStyle(color: Colors.grey),
-                    prefixIcon: const Icon(Icons.search, color: Colors.white),
+                    prefixIcon: const Icon(Icons.search),
                     filled: true,
-                    fillColor: Colors.grey.shade900,
+                    fillColor: Theme.of(context).colorScheme.surface,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                   ),
                 ),
@@ -335,7 +339,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               child: Container(
                 margin: const EdgeInsets.only(top: 10),
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: Colors.grey.shade900, borderRadius: const BorderRadius.vertical(top: Radius.circular(20))),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                ),
                 child: TabBarView(
                   controller: _tabController,
                   children: [

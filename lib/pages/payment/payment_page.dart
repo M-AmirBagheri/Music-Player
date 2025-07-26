@@ -45,17 +45,15 @@ class _PaymentPageState extends State<PaymentPage> {
     });
 
     Future.delayed(const Duration(seconds: 2), () {
-      Navigator.pop(context, amount); // Send paid amount back
+      Navigator.pop(context, amount);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text("Payment", style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.transparent,
+        title: const Text("Payment"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24),
@@ -63,13 +61,12 @@ class _PaymentPageState extends State<PaymentPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(widget.song['title'],
-                style: const TextStyle(color: Colors.white, fontSize: 20),
+                style: Theme.of(context).textTheme.titleLarge,
                 textAlign: TextAlign.center),
             const SizedBox(height: 20),
             TextField(
               controller: _cardController,
               keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
               decoration: _inputDecoration("Card Number (16 digits)"),
             ),
             const SizedBox(height: 12),
@@ -77,14 +74,12 @@ class _PaymentPageState extends State<PaymentPage> {
               controller: _pinController,
               obscureText: true,
               keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
               decoration: _inputDecoration("PIN"),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _amountController,
               keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
               decoration: _inputDecoration("Amount (e.g. 5.00)"),
             ),
             if (errorText != null)
@@ -98,7 +93,7 @@ class _PaymentPageState extends State<PaymentPage> {
             ElevatedButton(
               onPressed: _pay,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purpleAccent,
+                backgroundColor: Theme.of(context).colorScheme.secondary,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30)),
@@ -123,9 +118,9 @@ class _PaymentPageState extends State<PaymentPage> {
   InputDecoration _inputDecoration(String label) {
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: Colors.white70),
+      labelStyle: Theme.of(context).textTheme.bodySmall,
       filled: true,
-      fillColor: Colors.grey.shade900,
+      fillColor: Theme.of(context).colorScheme.surface,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,

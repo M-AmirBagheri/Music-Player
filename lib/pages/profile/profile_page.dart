@@ -36,31 +36,18 @@ class _ProfilePageState extends State<ProfilePage> {
         final nameController = TextEditingController(text: username);
         final emailController = TextEditingController(text: email);
         return AlertDialog(
-          backgroundColor: Colors.grey.shade900,
-          title: const Text("Edit Profile", style: TextStyle(color: Colors.white)),
+          title: const Text("Edit Profile"),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameController,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  labelText: "Username",
-                  labelStyle: const TextStyle(color: Colors.white),
-                  filled: true,
-                  fillColor: Colors.grey.shade800,
-                ),
+                decoration: const InputDecoration(labelText: "Username"),
               ),
               const SizedBox(height: 10),
               TextField(
                 controller: emailController,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  labelText: "Email",
-                  labelStyle: const TextStyle(color: Colors.white),
-                  filled: true,
-                  fillColor: Colors.grey.shade800,
-                ),
+                decoration: const InputDecoration(labelText: "Email"),
               ),
             ],
           ),
@@ -106,9 +93,8 @@ class _ProfilePageState extends State<ProfilePage> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: Colors.grey.shade900,
-        title: const Text('Delete Account', style: TextStyle(color: Colors.white)),
-        content: const Text('Are you sure you want to delete your account?', style: TextStyle(color: Colors.white70)),
+        title: const Text('Delete Account'),
+        content: const Text('Are you sure you want to delete your account?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -131,12 +117,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text('Profile', style: TextStyle(color: Colors.white)),
-      ),
+      appBar: AppBar(title: const Text('Profile')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -146,10 +127,10 @@ class _ProfilePageState extends State<ProfilePage> {
                 children: [
                   CircleAvatar(
                     radius: 50,
-                    backgroundColor: Colors.grey.shade800,
+                    backgroundColor: Theme.of(context).colorScheme.surface,
                     backgroundImage: _image != null ? FileImage(_image!) : null,
                     child: _image == null
-                        ? const Icon(Icons.person, color: Colors.white, size: 50)
+                        ? const Icon(Icons.person, size: 50)
                         : null,
                   ),
                   Positioned(
@@ -157,27 +138,27 @@ class _ProfilePageState extends State<ProfilePage> {
                     right: -10,
                     child: IconButton(
                       onPressed: _pickImage,
-                      icon: const Icon(Icons.camera_alt, color: Colors.purpleAccent),
+                      icon: Icon(Icons.camera_alt, color: Theme.of(context).colorScheme.secondary),
                     ),
                   )
                 ],
               ),
             ),
             const SizedBox(height: 20),
-            Text(username, style: const TextStyle(color: Colors.white, fontSize: 20)),
-            Text(email, style: const TextStyle(color: Colors.white60)),
+            Text(username, style: Theme.of(context).textTheme.titleMedium),
+            Text(email, style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 12),
             ElevatedButton(
               onPressed: _editProfile,
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.purpleAccent),
+              style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.secondary),
               child: const Text("Edit Profile"),
             ),
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text("Balance", style: TextStyle(color: Colors.white, fontSize: 18)),
-                Text("\$${balance.toStringAsFixed(2)}", style: const TextStyle(color: Colors.white, fontSize: 18)),
+                const Text("Balance", style: TextStyle(fontSize: 18)),
+                Text("\$${balance.toStringAsFixed(2)}", style: const TextStyle(fontSize: 18)),
               ],
             ),
             const SizedBox(height: 10),
@@ -187,9 +168,9 @@ class _ProfilePageState extends State<ProfilePage> {
               label: const Text("Increase Credit"),
             ),
             const SizedBox(height: 20),
-            const Text("Subscription", style: TextStyle(color: Colors.white, fontSize: 18)),
+            const Text("Subscription", style: TextStyle(fontSize: 18)),
             const SizedBox(height: 6),
-            Text(subscription, style: const TextStyle(color: Colors.white70)),
+            Text(subscription, style: Theme.of(context).textTheme.bodySmall),
             const SizedBox(height: 12),
             ToggleButtons(
               isSelected: List.generate(3, (index) => index == selectedPlan),
@@ -198,7 +179,7 @@ class _ProfilePageState extends State<ProfilePage> {
               },
               borderRadius: BorderRadius.circular(12),
               selectedColor: Colors.white,
-              fillColor: Colors.purpleAccent,
+              fillColor: Theme.of(context).colorScheme.secondary,
               color: Colors.white70,
               children: plans.map((plan) => Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -209,7 +190,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ElevatedButton(
               onPressed: () => _goToPayment("Get Premium (${plans[selectedPlan]})"),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purpleAccent,
+                backgroundColor: Theme.of(context).colorScheme.secondary,
                 padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 40),
               ),
               child: const Text("Get Premium"),

@@ -150,27 +150,27 @@ class _MusicShopPageState extends State<MusicShopPage> {
   void _showSortOptions() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.grey.shade900,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       builder: (_) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           ListTile(
-            title: const Text('Sort by Rating', style: TextStyle(color: Colors.white)),
+            title: const Text('Sort by Rating'),
             onTap: () => setState(() {
               _sortType = 'rating';
               Navigator.pop(context);
             }),
           ),
           ListTile(
-            title: const Text('Sort by Price', style: TextStyle(color: Colors.white)),
+            title: const Text('Sort by Price'),
             onTap: () => setState(() {
               _sortType = 'price';
               Navigator.pop(context);
             }),
           ),
           ListTile(
-            title: const Text('Sort by Downloads', style: TextStyle(color: Colors.white)),
+            title: const Text('Sort by Downloads'),
             onTap: () => setState(() {
               _sortType = 'downloads';
               Navigator.pop(context);
@@ -186,10 +186,8 @@ class _MusicShopPageState extends State<MusicShopPage> {
     final songs = getFilteredAndSortedSongs();
 
     return Scaffold(
-      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('Music Shop' , style: TextStyle(fontWeight: FontWeight.bold),),
-        backgroundColor: Colors.transparent,
+        title: const Text('Music Shop', style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
             icon: const Icon(Icons.sort),
@@ -211,14 +209,12 @@ class _MusicShopPageState extends State<MusicShopPage> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: TextField(
-              style: const TextStyle(color: Colors.white),
               onChanged: (value) => setState(() => _searchQuery = value),
               decoration: InputDecoration(
                 hintText: 'Search...',
-                hintStyle: const TextStyle(color: Colors.grey),
-                prefixIcon: const Icon(Icons.search, color: Colors.white),
+                prefixIcon: const Icon(Icons.search),
                 filled: true,
-                fillColor: Colors.grey.shade900,
+                fillColor: Theme.of(context).colorScheme.surface,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -236,21 +232,21 @@ class _MusicShopPageState extends State<MusicShopPage> {
                 child: ChoiceChip(
                   label: Text(_categories[index]),
                   selected: _selectedCategoryIndex == index,
-                  selectedColor: Colors.purple,
+                  selectedColor: Theme.of(context).colorScheme.primary,
                   labelStyle: const TextStyle(color: Colors.white),
                   onSelected: (_) => setState(() => _selectedCategoryIndex = index),
                 ),
               ),
             ),
           ),
-          const Divider(color: Colors.white24),
+          const Divider(),
           Expanded(
             child: ListView.builder(
               itemCount: songs.length,
               itemBuilder: (context, index) {
                 final song = songs[index];
                 return Card(
-                  color: Colors.grey.shade900,
+                  color: Theme.of(context).colorScheme.surface,
                   margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   child: ListTile(
                     leading: ClipRRect(
@@ -262,14 +258,14 @@ class _MusicShopPageState extends State<MusicShopPage> {
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(
                           color: Colors.grey,
-                          child: const Icon(Icons.music_note, color: Colors.white),
+                          child: const Icon(Icons.music_note),
                         ),
                       ),
                     ),
-                    title: Text(song['title'], style: const TextStyle(color: Colors.white)),
+                    title: Text(song['title']),
                     subtitle: Text(
                       '${song['artist']} • ⭐ ${song['rating']} • ${song['downloads']} downloads',
-                      style: const TextStyle(color: Colors.white70),
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
                     trailing: Text(
                       song['price'],
