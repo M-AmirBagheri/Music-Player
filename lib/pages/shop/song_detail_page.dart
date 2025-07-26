@@ -29,7 +29,6 @@ class _SongDetailPageState extends State<SongDetailPage> with SingleTickerProvid
   void initState() {
     super.initState();
     _currentSong = _audioManager.currentSong!;
-    _artworkWidget = _buildArtwork(_currentSong);
 
     _audioManager.player.currentIndexStream.listen((index) {
       if (index != null && index >= 0 && index < _audioManager.currentPlaylist.length) {
@@ -67,6 +66,12 @@ class _SongDetailPageState extends State<SongDetailPage> with SingleTickerProvid
         systemNavigationBarContrastEnforced: false,
       ),
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _artworkWidget = _buildArtwork(_currentSong);
   }
 
   @override
