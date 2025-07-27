@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../widgets/theme_provider.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../profile/profile_page.dart';
+import 'shop_song_list_page.dart';
 
 class MusicShopPage extends StatelessWidget {
   MusicShopPage({super.key});
@@ -13,25 +14,59 @@ class MusicShopPage extends StatelessWidget {
       'title': 'Iranian',
       'subtitle': 'Persian classics & pop',
       'image': 'assets/images/iran.jpg',
-      'url': 'https://open.spotify.com/playlist/37i9dQZF1DX5Ejj0EkURtP',
+      'songs': [
+        {
+          'title': 'Soltane Ghalbha',
+          'artist': 'Vigen',
+          'image': 'https://i.imgur.com/abc1.jpg',
+        },
+        {
+          'title': 'Bahar Bahar',
+          'artist': 'Ebi',
+          'image': 'https://i.imgur.com/abc2.jpg',
+        },
+      ],
     },
     {
       'title': 'International',
       'subtitle': 'Global chart hits',
       'image': 'assets/images/international.jpg',
-      'url': 'https://open.spotify.com/genre/pop-page',
+      'songs': [
+        {
+          'title': 'Shape of You',
+          'artist': 'Ed Sheeran',
+          'image': 'https://i.imgur.com/xyz1.jpg',
+        },
+        {
+          'title': 'Blinding Lights',
+          'artist': 'The Weeknd',
+          'image': 'https://i.imgur.com/xyz2.jpg',
+        },
+      ],
     },
     {
       'title': 'Local',
       'subtitle': 'Regional folk vibes',
       'image': 'assets/images/local.jpg',
-      'url': 'https://open.spotify.com/genre/folk-page',
+      'songs': [
+        {
+          'title': 'Shomal',
+          'artist': 'Mohsen Yeganeh',
+          'image': 'https://i.imgur.com/def1.jpg',
+        },
+      ],
     },
     {
       'title': 'New',
       'subtitle': 'Fresh new releases',
       'image': 'assets/images/new.jpg',
-      'url': 'https://open.spotify.com/genre/new-releases-page',
+      'songs': [
+        {
+          'title': 'New Life',
+          'artist': 'Ali Sorena',
+          'image': 'https://i.imgur.com/new1.jpg',
+        },
+      ],
     },
   ];
 
@@ -60,7 +95,6 @@ class MusicShopPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final isDark = Provider.of<ThemeProvider>(context).currentTheme == ThemeMode.dark;
     final textColor = isDark ? Colors.white : Colors.black;
     final bgColor = isDark ? Colors.black : const Color(0xFFFDF6EE);
@@ -120,7 +154,7 @@ class MusicShopPage extends StatelessWidget {
 
               const SizedBox(height: 24),
 
-              // Genres Section
+              // Genres section (linked to ShopSongListPage)
               Text('Genres', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
               const SizedBox(height: 16),
 
@@ -133,11 +167,16 @@ class MusicShopPage extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final category = categories[index];
                     return GestureDetector(
-                      onTap: () async {
-                        final url = Uri.parse(category['url']);
-                        if (await canLaunchUrl(url)) {
-                          await launchUrl(url, mode: LaunchMode.externalApplication);
-                        }
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ShopSongListPage(
+                              category: category['title'],
+                              songs: category['songs'],
+                            ),
+                          ),
+                        );
                       },
                       child: Container(
                         width: 180,
@@ -193,7 +232,7 @@ class MusicShopPage extends StatelessWidget {
 
               const SizedBox(height: 24),
 
-              // Spotify Section
+              // Spotify section (links to Spotify)
               Text('Spotify', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
               const SizedBox(height: 16),
 
