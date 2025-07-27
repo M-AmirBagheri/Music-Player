@@ -1,182 +1,182 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../widgets/bottom_nav_bar.dart';
-import '../../../widgets/theme_provider.dart';
+import '../profile/profile_page.dart';
+import 'shop_song_list_page.dart';
 
-class MusicShopPage extends StatelessWidget {
+class MusicShopPage extends StatefulWidget {
   const MusicShopPage({super.key});
 
   @override
+  State<MusicShopPage> createState() => _MusicShopPageState();
+}
+
+class _MusicShopPageState extends State<MusicShopPage> {
+  final List<String> _categories = ['Iranian', 'International', 'Local', 'New'];
+  final Map<String, List<Map<String, dynamic>>> _categorySongs = {
+    'Iranian': [
+      {
+        'title': 'Bi To Mimiram',
+        'artist': 'Mohsen Yeganeh',
+        'rating': 4.5,
+        'price': 'Free',
+        'downloads': 1500,
+        'image': 'https://picsum.photos/id/1011/200/200',
+      },
+      {
+        'title': 'Gole Yakh',
+        'artist': 'Ebi',
+        'rating': 4.7,
+        'price': '\$4.66',
+        'downloads': 2200,
+        'image': 'https://picsum.photos/id/1012/200/200',
+      },
+      {
+        'title': 'To Ke Nisti',
+        'artist': 'Sirvan Khosravi',
+        'rating': 4.6,
+        'price': '\$1.20',
+        'downloads': 1700,
+        'image': 'https://picsum.photos/id/1025/200/200',
+      },
+      {
+        'title': 'Zendegi Ba To',
+        'artist': 'Reza Sadeghi',
+        'rating': 4.4,
+        'price': 'Free',
+        'downloads': 1400,
+        'image': 'https://picsum.photos/id/1026/200/200',
+      },
+    ],
+    'International': [
+      {
+        'title': 'Shape of You',
+        'artist': 'Ed Sheeran',
+        'rating': 4.9,
+        'price': 'Free',
+        'downloads': 5000,
+        'image': 'https://picsum.photos/id/1013/200/200',
+      },
+      {
+        'title': 'Stay',
+        'artist': 'Justin Bieber',
+        'rating': 4.8,
+        'price': '\$2.23',
+        'downloads': 4300,
+        'image': 'https://picsum.photos/id/1014/200/200',
+      },
+    ],
+    'Local': [
+      {
+        'title': 'Bandari Beat',
+        'artist': 'Bandari Group',
+        'rating': 4.3,
+        'price': '\$0.84',
+        'downloads': 800,
+        'image': 'https://picsum.photos/id/1015/200/200',
+      },
+      {
+        'title': 'Kordi Melody',
+        'artist': 'Kurdish Folk',
+        'rating': 4.0,
+        'price': 'Free',
+        'downloads': 1000,
+        'image': 'https://picsum.photos/id/1016/200/200',
+      },
+    ],
+    'New': [
+      {
+        'title': 'Space Vibes',
+        'artist': 'Electro Boy',
+        'rating': 4.6,
+        'price': '\$1.37',
+        'downloads': 2100,
+        'image': 'https://picsum.photos/id/1018/200/200',
+      },
+      {
+        'title': 'Future Flow',
+        'artist': 'DJ Nova',
+        'rating': 4.2,
+        'price': 'Free',
+        'downloads': 1700,
+        'image': 'https://picsum.photos/id/1019/200/200',
+      },
+      {
+        'title': 'Bassline Rise',
+        'artist': 'Tronik',
+        'rating': 4.3,
+        'price': '\$0.79',
+        'downloads': 1800,
+        'image': 'https://picsum.photos/id/1020/200/200',
+      },
+    ],
+  };
+
+  @override
   Widget build(BuildContext context) {
-    final isDark = Provider.of<ThemeProvider>(context).currentTheme == ThemeMode.dark;
-    final textColor = isDark ? Colors.white : Colors.black;
-    final bgColor = isDark ? Colors.black : const Color(0xFFFDF6EE);
-    final cardColor = isDark ? Colors.grey[850] : Colors.white;
+    final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: bgColor,
-      bottomNavigationBar: const BottomNavBar(currentIndex: 1),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // بالای صفحه: سلام و منو
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 16,
-                        backgroundColor: Colors.pinkAccent,
-                        child: Icon(Icons.music_note, size: 18, color: Colors.white),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Hi, ',
-                        style: TextStyle(fontSize: 20, color: textColor),
-                      ),
-                      Text(
-                        'Martha',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
-                      ),
-                    ],
-                  ),
-                  Icon(Icons.menu, color: textColor),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              // سرچ باکس
-              TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search music',
-                  hintStyle: TextStyle(color: isDark ? Colors.white54 : Colors.black45),
-                  prefixIcon: Icon(Icons.search, color: isDark ? Colors.white : Colors.black),
-                  filled: true,
-                  fillColor: isDark ? Colors.grey[800] : Colors.grey[200],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // عنوان لیست محبوب‌ها
-              Text(
-                'Popular',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: textColor,
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // لیست افقی آهنگ‌ها
-              SizedBox(
-                height: 180,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: [
-                    _buildSongCard(
-                      context,
-                      imagePath: 'assets/images/violin.png', // آدرس تصویر محلی
-                      title: 'Classic Hits',
-                      subtitle: '30 songs for an acoustic afternoon',
-                      cardColor: cardColor!,
-                      textColor: textColor,
-                    ),
-                    const SizedBox(width: 12),
-                    _buildSongCard(
-                      context,
-                      imagePath: 'assets/images/guitar.png',
-                      title: 'Acoustic Vibes',
-                      subtitle: '30 songs for chilling',
-                      cardColor: cardColor,
-                      textColor: textColor,
-                    ),
-                    const SizedBox(width: 12),
-                    _buildSongCard(
-                      context,
-                      imagePath: 'assets/images/pop.png',
-                      title: 'Pop Party',
-                      subtitle: 'Feel good hits for your day',
-                      cardColor: cardColor,
-                      textColor: textColor,
-                    ),
-                  ],
-                ),
-              ),
-            ],
+      appBar: AppBar(
+        title: const Text('Music Shop', style: TextStyle(fontWeight: FontWeight.bold)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ProfilePage()),
+              );
+            },
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSongCard(
-      BuildContext context, {
-        required String imagePath,
-        required String title,
-        required String subtitle,
-        required Color cardColor,
-        required Color textColor,
-      }) {
-    return Container(
-      width: 140,
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 6,
-            offset: const Offset(2, 4),
-          )
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      body: Column(
         children: [
-          // تصویر
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-            child: Image.asset(
-              imagePath,
-              height: 100,
-              width: double.infinity,
-              fit: BoxFit.cover,
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Search music...',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+              ),
             ),
           ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text(
-              subtitle,
-              style: TextStyle(fontSize: 10, color: textColor.withOpacity(0.6)),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text(
-              title,
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: textColor),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 48,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _categories.length,
+              itemBuilder: (context, index) {
+                final cat = _categories[index];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ShopSongListPage(
+                            category: cat,
+                            songs: _categorySongs[cat]!,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Chip(
+                      label: Text(cat),
+                      backgroundColor: theme.chipTheme.backgroundColor,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ],
       ),
+      bottomNavigationBar: const BottomNavBar(currentIndex: 1),
     );
   }
 }
