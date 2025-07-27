@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../widgets/theme_provider.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../profile/profile_page.dart';
@@ -12,22 +13,45 @@ class MusicShopPage extends StatelessWidget {
     {
       'title': 'Iranian',
       'subtitle': 'Persian classics & pop',
-      'image': 'assets/images/iran.jpg',
+      'image': 'assets/images/placeholder.jpg',
     },
     {
       'title': 'International',
       'subtitle': 'Global chart hits',
-      'image': 'assets/images/international.jpg',
+      'image': 'assets/images/placeholder.jpg',
     },
     {
       'title': 'Local',
       'subtitle': 'Regional folk vibes',
-      'image': 'assets/images/local.jpg',
+      'image': 'assets/images/placeholder.jpg',
     },
     {
       'title': 'New',
       'subtitle': 'Fresh new releases',
-      'image': 'assets/images/new.jpg',
+      'image': 'assets/images/placeholder.jpg',
+    },
+  ];
+
+  final List<Map<String, String>> spotifyGenres = [
+    {
+      'title': 'Electronic',
+      'image': 'assets/images/placeholder.jpg',
+      'url': 'https://open.spotify.com/genre/electronic-page',
+    },
+    {
+      'title': 'Jazz',
+      'image': 'assets/images/placeholder.jpg',
+      'url': 'https://open.spotify.com/genre/jazz-page',
+    },
+    {
+      'title': 'Workout',
+      'image': 'assets/images/placeholder.jpg',
+      'url': 'https://open.spotify.com/genre/workout-page',
+    },
+    {
+      'title': 'Study',
+      'image': 'assets/images/placeholder.jpg',
+      'url': 'https://open.spotify.com/genre/study-page',
     },
   ];
 
@@ -43,11 +67,12 @@ class MusicShopPage extends StatelessWidget {
       backgroundColor: bgColor,
       bottomNavigationBar: BottomNavBar(currentIndex: 1),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header with avatar and menu
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -71,7 +96,10 @@ class MusicShopPage extends StatelessWidget {
                   ),
                 ],
               ),
+
               const SizedBox(height: 20),
+
+              // Search box
               TextField(
                 decoration: InputDecoration(
                   hintText: 'Search music',
@@ -86,9 +114,13 @@ class MusicShopPage extends StatelessWidget {
                   contentPadding: const EdgeInsets.symmetric(vertical: 0),
                 ),
               ),
+
               const SizedBox(height: 24),
+
+              // First category section
               Text('Genres', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
               const SizedBox(height: 16),
+
               SizedBox(
                 height: 275,
                 child: ListView.separated(
@@ -148,6 +180,70 @@ class MusicShopPage extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(horizontal: 8),
                               child: Text(
                                 category['title'],
+                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: textColor),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Spotify section
+              Text('Spotify', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
+              const SizedBox(height: 16),
+
+              SizedBox(
+                height: 180,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: spotifyGenres.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 12),
+                  itemBuilder: (context, index) {
+                    final genre = spotifyGenres[index];
+                    return GestureDetector(
+                      onTap: () async {
+                        final url = Uri.parse(genre['url']!);
+                        if (await canLaunchUrl(url)) {
+                          await launchUrl(url, mode: LaunchMode.externalApplication);
+                        }
+                      },
+                      child: Container(
+                        width: 140,
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.grey[900] : Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 6,
+                              offset: const Offset(2, 4),
+                            )
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ClipRRect(
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                              child: Image.asset(
+                                genre['image']!,
+                                height: 120,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              child: Text(
+                                genre['title']!,
                                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: textColor),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
