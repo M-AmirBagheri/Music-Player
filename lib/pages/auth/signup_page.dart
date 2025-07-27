@@ -35,7 +35,7 @@ class _SignUpPageState extends State<SignUpPage> {
       Future.delayed(const Duration(seconds: 1), () {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const MusicShopPage()),
+          MaterialPageRoute(builder: (context) => MusicShopPage()),
         );
       });
     }

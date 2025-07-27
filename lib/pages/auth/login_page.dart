@@ -19,7 +19,7 @@ class _LoginPageState extends State<LoginPage> {
     AuthService().login();
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => const MusicShopPage()),
+      MaterialPageRoute(builder: (_) => MusicShopPage()),
     );
   }
 

@@ -22,7 +22,7 @@ class BottomNavBar extends StatelessWidget {
         if (!AuthService().isLoggedIn) {
           destination = const LoginPage();
         } else {
-          destination = const MusicShopPage();
+          destination = MusicShopPage();
         }
         break;
       default:
