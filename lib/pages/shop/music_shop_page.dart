@@ -4,7 +4,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../widgets/theme_provider.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../profile/profile_page.dart';
-import 'shop_song_list_page.dart';
 
 class MusicShopPage extends StatelessWidget {
   MusicShopPage({super.key});
@@ -14,21 +13,25 @@ class MusicShopPage extends StatelessWidget {
       'title': 'Iranian',
       'subtitle': 'Persian classics & pop',
       'image': 'assets/images/iran.jpg',
+      'url': 'https://open.spotify.com/playlist/37i9dQZF1DX5Ejj0EkURtP',
     },
     {
       'title': 'International',
       'subtitle': 'Global chart hits',
       'image': 'assets/images/international.jpg',
+      'url': 'https://open.spotify.com/genre/pop-page',
     },
     {
       'title': 'Local',
       'subtitle': 'Regional folk vibes',
       'image': 'assets/images/local.jpg',
+      'url': 'https://open.spotify.com/genre/folk-page',
     },
     {
       'title': 'New',
       'subtitle': 'Fresh new releases',
       'image': 'assets/images/new.jpg',
+      'url': 'https://open.spotify.com/genre/new-releases-page',
     },
   ];
 
@@ -72,7 +75,7 @@ class MusicShopPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header with avatar and menu
+              // Header
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -117,7 +120,7 @@ class MusicShopPage extends StatelessWidget {
 
               const SizedBox(height: 24),
 
-              // First category section
+              // Genres Section
               Text('Genres', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
               const SizedBox(height: 16),
 
@@ -130,16 +133,11 @@ class MusicShopPage extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final category = categories[index];
                     return GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ShopSongListPage(
-                              category: category['title'],
-                              songs: [],
-                            ),
-                          ),
-                        );
+                      onTap: () async {
+                        final url = Uri.parse(category['url']);
+                        if (await canLaunchUrl(url)) {
+                          await launchUrl(url, mode: LaunchMode.externalApplication);
+                        }
                       },
                       child: Container(
                         width: 180,
@@ -195,7 +193,7 @@ class MusicShopPage extends StatelessWidget {
 
               const SizedBox(height: 24),
 
-              // Spotify section
+              // Spotify Section
               Text('Spotify', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
               const SizedBox(height: 16),
 
