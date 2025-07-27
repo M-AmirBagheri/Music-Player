@@ -13,44 +13,44 @@ class MusicShopPage extends StatelessWidget {
     {
       'title': 'Iranian',
       'subtitle': 'Persian classics & pop',
-      'image': 'assets/images/placeholder.jpg',
+      'image': 'assets/images/iran.jpg',
     },
     {
       'title': 'International',
       'subtitle': 'Global chart hits',
-      'image': 'assets/images/placeholder.jpg',
+      'image': 'assets/images/international.jpg',
     },
     {
       'title': 'Local',
       'subtitle': 'Regional folk vibes',
-      'image': 'assets/images/placeholder.jpg',
+      'image': 'assets/images/local.jpg',
     },
     {
       'title': 'New',
       'subtitle': 'Fresh new releases',
-      'image': 'assets/images/placeholder.jpg',
+      'image': 'assets/images/new.jpg',
     },
   ];
 
   final List<Map<String, String>> spotifyGenres = [
     {
       'title': 'Electronic',
-      'image': 'assets/images/placeholder.jpg',
+      'image': 'assets/images/electronic.jpg',
       'url': 'https://open.spotify.com/genre/electronic-page',
     },
     {
       'title': 'Jazz',
-      'image': 'assets/images/placeholder.jpg',
+      'image': 'assets/images/jazz.jpg',
       'url': 'https://open.spotify.com/genre/jazz-page',
     },
     {
       'title': 'Workout',
-      'image': 'assets/images/placeholder.jpg',
+      'image': 'assets/images/workout.jpg',
       'url': 'https://open.spotify.com/genre/workout-page',
     },
     {
-      'title': 'Study',
-      'image': 'assets/images/placeholder.jpg',
+      'title': 'Classic',
+      'image': 'assets/images/classic.jpg',
       'url': 'https://open.spotify.com/genre/study-page',
     },
   ];
@@ -193,14 +193,14 @@ class MusicShopPage extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
 
               // Spotify section
               Text('Spotify', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
               const SizedBox(height: 16),
 
               SizedBox(
-                height: 180,
+                height: 200,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: spotifyGenres.length,
@@ -215,7 +215,7 @@ class MusicShopPage extends StatelessWidget {
                         }
                       },
                       child: Container(
-                        width: 140,
+                        width: 155,
                         decoration: BoxDecoration(
                           color: isDark ? Colors.grey[900] : Colors.white,
                           borderRadius: BorderRadius.circular(16),
@@ -234,7 +234,7 @@ class MusicShopPage extends StatelessWidget {
                               borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                               child: Image.asset(
                                 genre['image']!,
-                                height: 120,
+                                height: 168,
                                 width: double.infinity,
                                 fit: BoxFit.cover,
                               ),
@@ -244,7 +244,7 @@ class MusicShopPage extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(horizontal: 8),
                               child: Text(
                                 genre['title']!,
-                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: textColor),
+                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: textColor),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
