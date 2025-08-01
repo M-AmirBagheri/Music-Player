@@ -80,7 +80,7 @@ class _PaymentPageState extends State<PaymentPage> {
             TextField(
               controller: _amountController,
               keyboardType: TextInputType.number,
-              decoration: _inputDecoration("Amount (e.g. 5.00)"),
+              decoration: _inputDecoration("Amount (e.g. 50000)"),
             ),
             if (errorText != null)
               Padding(

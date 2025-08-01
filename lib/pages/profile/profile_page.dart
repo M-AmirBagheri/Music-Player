@@ -22,6 +22,8 @@ class _ProfilePageState extends State<ProfilePage> {
   int selectedPlan = 0;
   final List<String> plans = ['Monthly', '3 Months', 'Yearly'];
 
+  static const Color primaryPurple = Color(0xFF9C27B0);
+
   void _pickImage() async {
     final picked = await _picker.pickImage(source: ImageSource.gallery);
     if (picked != null) {
@@ -101,34 +103,39 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final purple = const Color(0xFFB28DFF); // روشن‌تر
-    final semiGrey = Colors.grey.withOpacity(0.2);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final backgroundColor = isDark ? theme.scaffoldBackgroundColor : const Color(0xFFF1F1F1);
+    final cardColor = isDark ? Colors.grey[900] : Colors.white;
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         title: const Text('Profile'),
-        backgroundColor: theme.scaffoldBackgroundColor,
+        backgroundColor: backgroundColor,
         elevation: 0,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            // Default Avatar
+            // پروفایل با عکس انتخاب‌شده
             Stack(
               alignment: Alignment.bottomRight,
               children: [
                 CircleAvatar(
                   radius: 60,
-                  backgroundColor: purple,
-                  child: const Icon(Icons.person, size: 60, color: Colors.white),
+                  backgroundColor: primaryPurple,
+                  backgroundImage: _image != null ? FileImage(_image!) : null,
+                  child: _image == null
+                      ? const Icon(Icons.person, size: 60, color: Colors.white)
+                      : null,
                 ),
                 IconButton(
                   onPressed: _pickImage,
                   icon: const Icon(Icons.camera_alt),
                   style: IconButton.styleFrom(
-                    backgroundColor: purple,
+                    backgroundColor: primaryPurple,
                     shape: const CircleBorder(),
                     foregroundColor: Colors.white,
                   ),
@@ -136,24 +143,24 @@ class _ProfilePageState extends State<ProfilePage> {
               ],
             ),
             const SizedBox(height: 16),
-            Text(username, style: theme.textTheme.titleMedium?.copyWith(color: Colors.white)),
-            Text(email, style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white)),
+            Text(username, style: theme.textTheme.titleMedium?.copyWith(color: isDark ? Colors.white : Colors.black)),
+            Text(email, style: theme.textTheme.bodyMedium?.copyWith(color: isDark ? Colors.white70 : Colors.grey[700])),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _editProfile,
               style: ElevatedButton.styleFrom(
-                backgroundColor: purple,
+                backgroundColor: primaryPurple,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               child: const Text("Edit Profile", style: TextStyle(color: Colors.white)),
             ),
             const SizedBox(height: 30),
 
-            // Balance
+            // Balance Box
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: semiGrey,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
@@ -161,14 +168,14 @@ class _ProfilePageState extends State<ProfilePage> {
                 children: [
                   const Text("Balance", style: TextStyle(color: Colors.grey, fontSize: 13)),
                   const SizedBox(height: 4),
-                  Text("${balance.toInt()} Toman", style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text("${balance.toInt()} Toman", style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
                   ElevatedButton.icon(
                     onPressed: () => _goToPayment("Increase Credit"),
                     icon: const Icon(Icons.add),
                     label: const Text("Increase Credit", style: TextStyle(color: Colors.white)),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: purple,
+                      backgroundColor: primaryPurple,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
@@ -178,11 +185,11 @@ class _ProfilePageState extends State<ProfilePage> {
 
             const SizedBox(height: 30),
 
-            // Subscription
+            // Subscription Box
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: semiGrey,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
@@ -190,7 +197,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 children: [
                   const Text("Subscription", style: TextStyle(color: Colors.grey)),
                   const SizedBox(height: 4),
-                  Text(subscription, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                  Text(subscription, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
                   const SizedBox(height: 12),
                   Row(
                     children: List.generate(3, (i) {
@@ -202,14 +209,14 @@ class _ProfilePageState extends State<ProfilePage> {
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             margin: const EdgeInsets.symmetric(horizontal: 4),
                             decoration: BoxDecoration(
-                              color: isSelected ? purple : Colors.transparent,
+                              color: isSelected ? primaryPurple : Colors.transparent,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Center(
                               child: Text(
                                 plans[i],
                                 style: TextStyle(
-                                  color: isSelected ? Colors.white : Colors.white70,
+                                  color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.grey[700]),
                                 ),
                               ),
                             ),
@@ -224,7 +231,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     icon: const Icon(Icons.star_border),
                     label: const Text("Get Premium", style: TextStyle(color: Colors.white)),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: purple,
+                      backgroundColor: primaryPurple,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
@@ -232,6 +239,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ],
               ),
             ),
+
             const SizedBox(height: 30),
             TextButton(
               onPressed: _deleteAccount,
