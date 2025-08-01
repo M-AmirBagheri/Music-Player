@@ -17,9 +17,7 @@ class _ShopSongDetailPageState extends State<ShopSongDetailPage> {
   bool isDownloaded = false;
 
   void _downloadSong() {
-    setState(() {
-      isDownloaded = true;
-    });
+    setState(() => isDownloaded = true);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Download started...")),
     );
@@ -37,18 +35,6 @@ class _ShopSongDetailPageState extends State<ShopSongDetailPage> {
     });
   }
 
-  void _likeComment(int index) {
-    setState(() {
-      comments[index]['likes']++;
-    });
-  }
-
-  void _dislikeComment(int index) {
-    setState(() {
-      comments[index]['dislikes']++;
-    });
-  }
-
   @override
   void dispose() {
     _commentController.dispose();
@@ -58,160 +44,233 @@ class _ShopSongDetailPageState extends State<ShopSongDetailPage> {
   @override
   Widget build(BuildContext context) {
     final song = widget.song;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : Colors.black;
-    final secondaryColor = isDark ? Colors.white70 : Colors.black54;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
+        title: const Text("Song Details"),
+        centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Text(song['title'], style: TextStyle(color: textColor)),
-        iconTheme: IconThemeData(color: textColor),
+        foregroundColor: theme.textTheme.bodyLarge?.color,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Image.network(
-                song['image'],
-                height: 250,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(song['title'], style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: textColor)),
-            const SizedBox(height: 8),
-            Text(song['artist'], style: TextStyle(fontSize: 16, color: secondaryColor)),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDark
+                ? [Colors.black, Colors.grey.shade900]
+                : [Colors.white, Colors.grey.shade100],
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
               children: [
-                Icon(Icons.star, color: Colors.amber.shade400, size: 20),
-                const SizedBox(width: 4),
-                Text('${song['rating']}', style: TextStyle(color: textColor)),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.network(
+                    song['image'],
+                    width: double.infinity,
+                    height: 250,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(song['title'],
+                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 4),
+                Text(song['artist'], style: theme.textTheme.bodyMedium),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.star, color: Colors.amber, size: 20),
+                    const SizedBox(width: 4),
+                    Text('${song['rating']}', style: theme.textTheme.bodyMedium),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Price: ${song['price']}",
+                  style: TextStyle(
+                    color: song['price'] == 'Free' ? Colors.green : Colors.orangeAccent,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Audio Bar (Mock)
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.grey[900] : Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          const Text("0:00"),
+                          Expanded(
+                            child: Slider(
+                              value: 0.3,
+                              onChanged: (_) {},
+                              activeColor: Colors.purple,
+                              inactiveColor: Colors.grey.shade300,
+                            ),
+                          ),
+                          const Text("3:45"),
+                        ],
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: const [
+                          Icon(Icons.skip_previous),
+                          Icon(Icons.play_circle, size: 40),
+                          Icon(Icons.skip_next),
+                          Icon(Icons.volume_up),
+                        ],
+                      )
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Action Buttons
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  alignment: WrapAlignment.center,
+                  children: [
+                    if (song['price'] == 'Free' && !isDownloaded)
+                      FilledButton.icon(
+                        onPressed: _downloadSong,
+                        icon: const Icon(Icons.download),
+                        label: const Text("Download"),
+                      ),
+                    if (song['price'] != 'Free')
+                      FilledButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => PaymentPage(song: song)),
+                          );
+                        },
+                        icon: const Icon(Icons.shopping_cart),
+                        label: const Text("Buy Now"),
+                      ),
+                    OutlinedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.favorite_border),
+                      label: const Text("Favorite"),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.share),
+                      label: const Text("Share"),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 30),
+
+                // User Rating
+                Column(
+                  children: [
+                    Text("Rate This Song", style: theme.textTheme.titleMedium),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(5, (index) {
+                        final star = index + 1;
+                        return IconButton(
+                          onPressed: () => setState(() => userRating = star.toDouble()),
+                          icon: Icon(
+                            Icons.star,
+                            color: userRating >= star ? Colors.amber : Colors.grey.shade400,
+                          ),
+                        );
+                      }),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 30),
+
+                // Comments
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text("Comments", style: theme.textTheme.titleMedium),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _commentController,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    hintText: "Write your comment...",
+                    filled: true,
+                    fillColor: isDark ? Colors.grey[850] : Colors.grey[200],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade400),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: _submitComment,
+                    child: const Text("Submit Comment"),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                if (comments.isEmpty)
+                  Text("No comments yet. Be the first to comment!",
+                      style: theme.textTheme.bodySmall),
+                ...comments.map((c) {
+                  return Container(
+                    margin: const EdgeInsets.symmetric(vertical: 6),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.grey[850] : Colors.grey[200],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(c['text'], style: theme.textTheme.bodyMedium),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            IconButton(
+                              onPressed: () => setState(() => c['likes']++),
+                              icon: const Icon(Icons.thumb_up, size: 18),
+                            ),
+                            Text('${c['likes']}'),
+                            IconButton(
+                              onPressed: () => setState(() => c['dislikes']++),
+                              icon: const Icon(Icons.thumb_down, size: 18),
+                            ),
+                            Text('${c['dislikes']}'),
+                          ],
+                        )
+                      ],
+                    ),
+                  );
+                }).toList(),
               ],
             ),
-            const SizedBox(height: 16),
-            Text(
-              'Price: ${song['price']}',
-              style: TextStyle(
-                fontSize: 18,
-                color: song['price'] == 'Free' ? Colors.green : Colors.orangeAccent,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 20),
-            if (song['price'] == 'Free' && !isDownloaded)
-              FilledButton(
-                onPressed: _downloadSong,
-                style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12)),
-                child: const Text("Download"),
-              )
-            else if (isDownloaded)
-              Text("✅ Downloaded", style: TextStyle(color: Colors.green.shade300)),
-            if (song['price'] != 'Free')
-              FilledButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => PaymentPage(song: song)),
-                  );
-                },
-                style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12)),
-                child: const Text("Buy Now"),
-              ),
-
-            const SizedBox(height: 30),
-            Text("Your Rating:", style: TextStyle(color: textColor, fontSize: 16)),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(5, (index) {
-                final starIndex = index + 1;
-                return IconButton(
-                  icon: Icon(
-                    Icons.star,
-                    color: userRating >= starIndex ? Colors.amber : Colors.grey.shade400,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      userRating = starIndex.toDouble();
-                    });
-                  },
-                );
-              }),
-            ),
-
-            const SizedBox(height: 30),
-            Text("Leave a Comment:", style: TextStyle(color: textColor, fontSize: 16)),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _commentController,
-              style: TextStyle(color: textColor),
-              decoration: InputDecoration(
-                hintText: "Write your comment...",
-                hintStyle: TextStyle(color: secondaryColor),
-                filled: true,
-                fillColor: isDark ? Colors.grey[900] : Colors.grey[200],
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-              ),
-            ),
-            const SizedBox(height: 8),
-            FilledButton(
-              onPressed: _submitComment,
-              child: const Text("Submit"),
-            ),
-            const SizedBox(height: 20),
-
-            if (comments.isNotEmpty)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Comments:", style: TextStyle(color: textColor, fontSize: 16)),
-                  const SizedBox(height: 12),
-                  ...comments.asMap().entries.map((entry) {
-                    final i = entry.key;
-                    final comment = entry.value;
-                    return Card(
-                      color: isDark ? Colors.grey[900] : Colors.grey[100],
-                      margin: const EdgeInsets.symmetric(vertical: 6),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(child: Text(comment['text'], style: TextStyle(color: textColor))),
-                            Column(
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.thumb_up, size: 20),
-                                  color: secondaryColor,
-                                  onPressed: () => _likeComment(i),
-                                ),
-                                Text('${comment['likes']}', style: TextStyle(color: textColor)),
-                                IconButton(
-                                  icon: const Icon(Icons.thumb_down, size: 20),
-                                  color: secondaryColor,
-                                  onPressed: () => _dislikeComment(i),
-                                ),
-                                Text('${comment['dislikes']}', style: TextStyle(color: textColor)),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }),
-                ],
-              ),
-          ],
+          ),
         ),
       ),
     );
