@@ -35,4 +35,11 @@ CREATE TABLE comments (
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (song_id) REFERENCES songs(id)
 );
-
+CREATE TABLE ratings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    song_id INT,
+    rating INT CHECK (rating BETWEEN 0 AND 5),
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (song_id) REFERENCES songs(id)
+);
