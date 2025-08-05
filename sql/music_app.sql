@@ -16,3 +16,23 @@ CREATE TABLE songs (
     price DOUBLE DEFAULT 0,
     cover_path TEXT 
 );
+CREATE TABLE purchased_songs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    song_id INT,
+    purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (song_id) REFERENCES songs(id)
+);
+CREATE TABLE comments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    song_id INT,
+    text TEXT NOT NULL,
+    like_count INT DEFAULT 0,
+    dislike_count INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (song_id) REFERENCES songs(id)
+);
+
