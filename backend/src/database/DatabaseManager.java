@@ -95,49 +95,83 @@ public class DatabaseManager {
     }
 
     public boolean purchaseSong(String username, int songId) {
-    String findUserSql = "SELECT id, credit FROM users WHERE username = ?";
-    String findSongSql = "SELECT price FROM songs WHERE id = ?";
-    String insertPurchaseSql = "INSERT INTO purchased_songs (user_id, song_id) VALUES (?, ?)";
-    String updateCreditSql = "UPDATE users SET credit = credit - ? WHERE id = ?";
+        String findUserSql = "SELECT id, credit FROM users WHERE username = ?";
+        String findSongSql = "SELECT price FROM songs WHERE id = ?";
+        String insertPurchaseSql = "INSERT INTO purchased_songs (user_id, song_id) VALUES (?, ?)";
+        String updateCreditSql = "UPDATE users SET credit = credit - ? WHERE id = ?";
 
-    try {
-      
-        PreparedStatement userStmt = connection.prepareStatement(findUserSql);
-        userStmt.setString(1, username);
-        ResultSet userRs = userStmt.executeQuery();
+        try {
+        
+            PreparedStatement userStmt = connection.prepareStatement(findUserSql);
+            userStmt.setString(1, username);
+            ResultSet userRs = userStmt.executeQuery();
 
-        if (!userRs.next()) return false;
-        int userId = userRs.getInt("id");
-        double credit = userRs.getDouble("credit");
+            if (!userRs.next()) return false;
+            int userId = userRs.getInt("id");
+            double credit = userRs.getDouble("credit");
 
-      
-        PreparedStatement songStmt = connection.prepareStatement(findSongSql);
-        songStmt.setInt(1, songId);
-        ResultSet songRs = songStmt.executeQuery();
+        
+            PreparedStatement songStmt = connection.prepareStatement(findSongSql);
+            songStmt.setInt(1, songId);
+            ResultSet songRs = songStmt.executeQuery();
 
-        if (!songRs.next()) return false;
-        double price = songRs.getDouble("price");
+            if (!songRs.next()) return false;
+            double price = songRs.getDouble("price");
 
-       
-        if (credit < price) return false;
+        
+            if (credit < price) return false;
 
-       
-        PreparedStatement purchaseStmt = connection.prepareStatement(insertPurchaseSql);
-        purchaseStmt.setInt(1, userId);
-        purchaseStmt.setInt(2, songId);
-        purchaseStmt.executeUpdate();
+        
+            PreparedStatement purchaseStmt = connection.prepareStatement(insertPurchaseSql);
+            purchaseStmt.setInt(1, userId);
+            purchaseStmt.setInt(2, songId);
+            purchaseStmt.executeUpdate();
 
-       
-        PreparedStatement updateCreditStmt = connection.prepareStatement(updateCreditSql);
-        updateCreditStmt.setDouble(1, price);
-        updateCreditStmt.setInt(2, userId);
-        updateCreditStmt.executeUpdate();
+        
+            PreparedStatement updateCreditStmt = connection.prepareStatement(updateCreditSql);
+            updateCreditStmt.setDouble(1, price);
+            updateCreditStmt.setInt(2, userId);
+            updateCreditStmt.executeUpdate();
 
-        return true;
-    } catch (SQLException e) {
-        System.err.println("Error in purchaseSong(): " + e.getMessage());
-        return false;
+            return true;
+        } catch (SQLException e) {
+            System.err.println("Error in purchaseSong(): " + e.getMessage());
+            return false;
+        }
     }
-}
+
+    public boolean rateSong(int userId, int songId, int rating) {
+        if (rating < 0 || rating > 5) return false; 
+
+        String checkSql = "SELECT id FROM ratings WHERE user_id = ? AND song_id = ?";
+        String insertSql = "INSERT INTO ratings (user_id, song_id, rating) VALUES (?, ?, ?)";
+        String updateSql = "UPDATE ratings SET rating = ? WHERE user_id = ? AND song_id = ?";
+
+        try {
+            PreparedStatement checkStmt = connection.prepareStatement(checkSql);
+            checkStmt.setInt(1, userId);
+            checkStmt.setInt(2, songId);
+            ResultSet rs = checkStmt.executeQuery();
+
+            if (rs.next()) {
+                PreparedStatement updateStmt = connection.prepareStatement(updateSql);
+                updateStmt.setInt(1, rating);
+                updateStmt.setInt(2, userId);
+                updateStmt.setInt(3, songId);
+                updateStmt.executeUpdate();
+            } else {
+                PreparedStatement insertStmt = connection.prepareStatement(insertSql);
+                insertStmt.setInt(1, userId);
+                insertStmt.setInt(2, songId);
+                insertStmt.setInt(3, rating);
+                insertStmt.executeUpdate();
+            }
+
+            return true;
+        } catch (SQLException e) {
+            System.err.println("Error in rateSong(): " + e.getMessage());
+            return false;
+        }
+    }
 
 }
