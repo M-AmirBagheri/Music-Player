@@ -38,7 +38,7 @@ public class DatabaseManager {
     try (PreparedStatement stmt = connection.prepareStatement(sql)) {
         stmt.setString(1, username);
         ResultSet rs = stmt.executeQuery();
-        if (rs.next()) {
+        if (rs.next()) { 
             return new User(
                 rs.getInt("id"),
                 rs.getString("username"),
@@ -53,4 +53,21 @@ public class DatabaseManager {
     }
     return null;
     }
+
+    public boolean addUser(User user) {
+    String sql = "INSERT INTO users (username, email, password, credit, subscription) VALUES (?, ?, ?, ?, ?)";
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        stmt.setString(1, user.getUsername());
+        stmt.setString(2, user.getEmail());
+        stmt.setString(3, user.getPassword());
+        stmt.setDouble(4, user.getCredit());
+        stmt.setString(5, user.getSubscription());
+        int rows = stmt.executeUpdate();
+        return rows > 0;
+    } catch (SQLException e) {
+        System.err.println("Error in addUser(): " + e.getMessage());
+        return false;
+    }
+}
+
 }
