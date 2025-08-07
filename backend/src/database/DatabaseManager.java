@@ -32,4 +32,25 @@ public class DatabaseManager {
             System.err.println("Error closing connection: " + e.getMessage());
         }
     }
+
+    public User getUser(String username) {
+    String sql = "SELECT * FROM users WHERE username = ?";
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        stmt.setString(1, username);
+        ResultSet rs = stmt.executeQuery();
+        if (rs.next()) {
+            return new User(
+                rs.getInt("id"),
+                rs.getString("username"),
+                rs.getString("email"),
+                rs.getString("password"),
+                rs.getDouble("credit"),
+                rs.getString("subscription")
+            );
+        }
+    } catch (SQLException e) {
+        System.err.println("Error in getUser(): " + e.getMessage());
+    }
+    return null;
+    }
 }
