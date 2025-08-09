@@ -327,4 +327,56 @@ public class DatabaseManager {
             return false;
         }
     }
+
+
+
+
+     public boolean addComment(int userId, int songId, String text) {
+        if (text == null || text.trim().isEmpty()) return false;
+        final String sql = "INSERT INTO comments (song_id, user_id, text) VALUES (?, ?, ?)";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, songId);
+            stmt.setInt(2, userId);
+            stmt.setString(3, text.trim());
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error in addComment(): " + e.getMessage());
+            return false;
+        }
+    }
+
+    public List<Comment> getCommentsBySong(int songId, String sortBy) {
+        String order = "c.created_at DESC";
+        if ("most_likes".equalsIgnoreCase(sortBy))      order = "c.likes DESC, c.created_at DESC";
+        else if ("most_dislikes".equalsIgnoreCase(sortBy)) order = "c.dislikes DESC, c.created_at DESC";
+
+        final String sql =
+            "SELECT c.id, c.song_id, c.user_id, u.username, c.text, c.likes, c.dislikes, c.created_at " +
+            "FROM comments c JOIN users u ON c.user_id = u.id " +
+            "WHERE c.song_id = ? " +
+            "ORDER BY " + order;
+
+        List<Comment> list = new ArrayList<>();
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, songId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new Comment(
+                        rs.getInt("id"),
+                        rs.getInt("song_id"),
+                        rs.getInt("user_id"),
+                        rs.getString("username"),
+                        rs.getString("text"),
+                        rs.getInt("likes"),
+                        rs.getInt("dislikes"),
+                        rs.getString("created_at")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error in getCommentsBySong(): " + e.getMessage());
+        }
+        return list;
+    }
+
 }
