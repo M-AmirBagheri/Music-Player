@@ -69,6 +69,28 @@ public class DatabaseManager {
         return null;
     }
 
+     public boolean isUsernameTaken(String username) {
+        final String sql = "SELECT 1 FROM users WHERE username = ? LIMIT 1";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            try (ResultSet rs = stmt.executeQuery()) { return rs.next(); }
+        } catch (SQLException e) {
+            System.err.println("Error in isUsernameTaken(): " + e.getMessage());
+            return true;
+        }
+    }
+
+    public boolean isEmailTaken(String email) {
+        final String sql = "SELECT 1 FROM users WHERE email = ? LIMIT 1";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, email);
+            try (ResultSet rs = stmt.executeQuery()) { return rs.next(); }
+        } catch (SQLException e) {
+            System.err.println("Error in isEmailTaken(): " + e.getMessage());
+            return true;
+        }
+    }
+
     public boolean addUser(User user) {
         final String sql =
             "INSERT INTO users (username, email, password, credit, subscription) VALUES (?, ?, ?, ?, ?)";
