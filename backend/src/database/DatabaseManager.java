@@ -155,6 +155,9 @@ public class DatabaseManager {
         }
     }
     
+
+
+    
     public List<Song> getAllSongs() {
         List<Song> songs = new ArrayList<>();
         final String sql = "SELECT * FROM songs";
@@ -186,8 +189,6 @@ public class DatabaseManager {
             return false;
         }
     }
-
-    
 
      public boolean purchaseSong(String username, int songId) {
         final String findUserSql = "SELECT id, credit FROM users WHERE username = ?";
@@ -242,6 +243,35 @@ public class DatabaseManager {
         }
     }
     
+    public List<Song> getPurchasedSongs(int userId) {
+        List<Song> songs = new ArrayList<>();
+        final String sql =
+            "SELECT s.id, s.title, s.artist, s.rating, s.price, s.cover_path " +
+            "FROM purchased_songs ps JOIN songs s ON ps.song_id = s.id " +
+            "WHERE ps.user_id = ? ORDER BY ps.purchase_date DESC";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    songs.add(new Song(
+                        rs.getInt("id"),
+                        rs.getString("title"),
+                        rs.getString("artist"),
+                        rs.getFloat("rating"),
+                        rs.getDouble("price"),
+                        rs.getString("cover_path")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error in getPurchasedSongs(userId): " + e.getMessage());
+        }
+        return songs;
+    }
+
+
+
+
     public boolean rateSong(int userId, int songId, int rating) {
         if (rating < 0 || rating > 5) return false;
 
@@ -278,20 +308,23 @@ public class DatabaseManager {
         }
     }
 
-    public List<Song> getPurchasedSongs(String username) {
-        final String findUserSql = "SELECT id FROM users WHERE username = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(findUserSql)) {
-            stmt.setString(1, username);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    int userId = rs.getInt("id");
-                    return getPurchasedSongs(userId);
-                }
+    public boolean updateSongRating(int songId) {
+        final String avgSql = "SELECT COALESCE(AVG(rating), 0) AS avg_rating FROM ratings WHERE song_id = ?";
+        final String updSql = "UPDATE songs SET rating = ? WHERE id = ?";
+        try (PreparedStatement a = connection.prepareStatement(avgSql)) {
+            a.setInt(1, songId);
+            double avg = 0;
+            try (ResultSet rs = a.executeQuery()) {
+                if (rs.next()) avg = rs.getDouble("avg_rating");
+            }
+            try (PreparedStatement u = connection.prepareStatement(updSql)) {
+                u.setDouble(1, avg);
+                u.setInt(2, songId);
+                return u.executeUpdate() > 0;
             }
         } catch (SQLException e) {
-            System.err.println("Error in getPurchasedSongs(username): " + e.getMessage());
+            System.err.println("Error in updateSongRating(): " + e.getMessage());
+            return false;
         }
-        return new ArrayList<>();
     }
-
 }
