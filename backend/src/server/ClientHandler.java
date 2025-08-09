@@ -66,5 +66,54 @@ public class ClientHandler extends Thread {
                 sendMessage("ERROR;Invalid command");
                 break;
         }
-    }
-}
+        }
+
+
+         private void sendAllSongs() {
+            List<Song> songs = db.getAllSongs();
+            Gson gson = new Gson();
+            String jsonResponse = gson.toJson(songs);
+            sendMessage("SONG_LIST;" + jsonResponse);
+        }
+
+       
+        private void handleLogin(String username, String password) {
+            if (db.validateLogin(username, password) != null) {
+                sendMessage("LOGIN_SUCCESS");
+            } else {
+                sendMessage("ERROR;Invalid credentials");
+            }
+        }
+
+   
+        private void handlePurchaseSong(String username, int songId) {
+            if (db.purchaseSong(username, songId)) {
+                sendMessage("PURCHASE_SUCCESS");
+            } else {
+                sendMessage("ERROR;Purchase failed");
+            }
+        }
+
+       
+        private void handleRateSong(int userId, int songId, int rating) {
+            if (db.rateSong(userId, songId, rating)) {
+                sendMessage("RATE_SUCCESS");
+            } else {
+                sendMessage("ERROR;Rating failed");
+            }
+        }
+
+      
+        private void handleAddComment(int songId, int userId, String commentText) {
+            if (db.addComment(userId, songId, commentText)) {
+                sendMessage("COMMENT_ADDED");
+            } else {
+                sendMessage("ERROR;Adding comment failed");
+            }
+        }
+
+       
+        private void sendMessage(String message) {
+            out.println(message);
+        }
+}   
