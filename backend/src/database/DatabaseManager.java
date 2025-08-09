@@ -176,60 +176,63 @@ public class DatabaseManager {
         return songs;
     }
 
+    public boolean deleteSong(int songId) {
+        final String sql = "DELETE FROM songs WHERE id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, songId);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error in deleteSong(): " + e.getMessage());
+            return false;
+        }
+    }
+
     
 
-    public boolean purchaseSong(String username, int songId) {
+     public boolean purchaseSong(String username, int songId) {
         final String findUserSql = "SELECT id, credit FROM users WHERE username = ?";
         final String findSongSql = "SELECT price FROM songs WHERE id = ?";
         final String insertPurchaseSql = "INSERT INTO purchased_songs (user_id, song_id) VALUES (?, ?)";
         final String updateCreditSql = "UPDATE users SET credit = credit - ? WHERE id = ?";
 
         try {
-            
-            int userId;
-            double credit;
-            try (PreparedStatement userStmt = connection.prepareStatement(findUserSql)) {
-                userStmt.setString(1, username);
-                try (ResultSet userRs = userStmt.executeQuery()) {
-                    if (!userRs.next()) return false;
-                    userId = userRs.getInt("id");
-                    credit = userRs.getDouble("credit");
+           
+            int userId; double credit;
+            try (PreparedStatement s = connection.prepareStatement(findUserSql)) {
+                s.setString(1, username);
+                try (ResultSet r = s.executeQuery()) {
+                    if (!r.next()) return false;
+                    userId = r.getInt("id");
+                    credit = r.getDouble("credit");
                 }
             }
 
-            
+           
             double price;
-            try (PreparedStatement songStmt = connection.prepareStatement(findSongSql)) {
-                songStmt.setInt(1, songId);
-                try (ResultSet songRs = songStmt.executeQuery()) {
-                    if (!songRs.next()) return false;
-                    price = songRs.getDouble("price");
+            try (PreparedStatement s = connection.prepareStatement(findSongSql)) {
+                s.setInt(1, songId);
+                try (ResultSet r = s.executeQuery()) {
+                    if (!r.next()) return false;
+                    price = r.getDouble("price");
                 }
             }
 
-            
             if (credit < price) return false;
 
-            
-            boolean oldAutoCommit = connection.getAutoCommit();
+            boolean oldAuto = connection.getAutoCommit();
             connection.setAutoCommit(false);
-            try (PreparedStatement purchaseStmt = connection.prepareStatement(insertPurchaseSql);
-                 PreparedStatement updateCreditStmt = connection.prepareStatement(updateCreditSql)) {
+            try (PreparedStatement p1 = connection.prepareStatement(insertPurchaseSql);
+                 PreparedStatement p2 = connection.prepareStatement(updateCreditSql)) {
 
-                purchaseStmt.setInt(1, userId);
-                purchaseStmt.setInt(2, songId);
-                purchaseStmt.executeUpdate();
-
-                updateCreditStmt.setDouble(1, price);
-                updateCreditStmt.setInt(2, userId);
-                updateCreditStmt.executeUpdate();
+                p1.setInt(1, userId); p1.setInt(2, songId); p1.executeUpdate();
+                p2.setDouble(1, price); p2.setInt(2, userId); p2.executeUpdate();
 
                 connection.commit();
-            } catch (SQLException txErr) {
+            } catch (SQLException tx) {
                 connection.rollback();
-                throw txErr;
+                throw tx;
             } finally {
-                connection.setAutoCommit(oldAutoCommit);
+                connection.setAutoCommit(oldAuto);
             }
 
             return true;
@@ -238,7 +241,6 @@ public class DatabaseManager {
             return false;
         }
     }
-
     
     public boolean rateSong(int userId, int songId, int rating) {
         if (rating < 0 || rating > 5) return false;
