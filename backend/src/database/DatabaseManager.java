@@ -5,6 +5,7 @@ import java.util.List;
 
 import models.User;
 import models.Song;
+import models.Comment;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -379,4 +380,65 @@ public class DatabaseManager {
         return list;
     }
 
+    public boolean voteComment(int commentId, int userId, boolean like) {
+        String checkSql = "SELECT vote_type FROM comment_votes WHERE comment_id = ? AND user_id = ?";
+        String insertSql = "INSERT INTO comment_votes (comment_id, user_id, vote_type) VALUES (?, ?, ?)";
+        String updateSql = "UPDATE comment_votes SET vote_type = ? WHERE comment_id = ? AND user_id = ?";
+
+        String updateLikeCount = like
+            ? "UPDATE comments SET likes = likes + 1, dislikes = CASE WHEN dislikes > 0 AND ? = 'dislike' THEN dislikes - 1 ELSE dislikes END WHERE id = ?"
+            : "UPDATE comments SET dislikes = dislikes + 1, likes = CASE WHEN likes > 0 AND ? = 'like' THEN likes - 1 ELSE likes END WHERE id = ?";
+
+        try {
+            String prevVote = null;
+            try (PreparedStatement stmt = connection.prepareStatement(checkSql)) {
+                stmt.setInt(1, commentId);
+                stmt.setInt(2, userId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        prevVote = rs.getString("vote_type");
+                    }
+                }
+            }
+
+            if (prevVote != null) {
+                if ((like && prevVote.equals("like")) || (!like && prevVote.equals("dislike"))) {
+                    return false;
+                }
+                try (PreparedStatement stmt = connection.prepareStatement(updateSql)) {
+                    stmt.setString(1, like ? "like" : "dislike");
+                    stmt.setInt(2, commentId);
+                    stmt.setInt(3, userId);
+                    stmt.executeUpdate();
+                }
+            } else {
+                try (PreparedStatement stmt = connection.prepareStatement(insertSql)) {
+                    stmt.setInt(1, commentId);
+                    stmt.setInt(2, userId);
+                    stmt.setString(3, like ? "like" : "dislike");
+                    stmt.executeUpdate();
+                }
+            }
+
+            try (PreparedStatement stmt = connection.prepareStatement(updateLikeCount)) {
+                stmt.setString(1, like ? "like" : "dislike");
+                stmt.setInt(2, commentId);
+                stmt.executeUpdate();
+            }
+
+            return true;
+
+        } catch (SQLException e) {
+            System.err.println("Error in voteComment(): " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean likeComment(int commentId, int userId) {
+        return voteComment(commentId, userId, true);
+    }
+
+    public boolean dislikeComment(int commentId, int userId) {
+        return voteComment(commentId, userId, false);
+    }
 }
