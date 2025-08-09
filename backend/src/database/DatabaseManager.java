@@ -207,37 +207,6 @@ public class DatabaseManager {
         }
     }
 
-    
-
-    public List<Song> getPurchasedSongs(int userId) {
-        List<Song> songs = new ArrayList<>();
-        final String sql =
-            "SELECT s.id, s.title, s.artist, s.rating, s.price, s.cover_path " +
-            "FROM purchased_songs ps " +
-            "JOIN songs s ON ps.song_id = s.id " +
-            "WHERE ps.user_id = ? " +
-            "ORDER BY ps.purchase_date DESC";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, userId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    songs.add(new Song(
-                        rs.getInt("id"),
-                        rs.getString("title"),
-                        rs.getString("artist"),
-                        rs.getFloat("rating"),
-                        rs.getDouble("price"),
-                        rs.getString("cover_path")
-                    ));
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("Error in getPurchasedSongs(userId): " + e.getMessage());
-        }
-        return songs;
-    }
-
     public List<Song> getPurchasedSongs(String username) {
         final String findUserSql = "SELECT id FROM users WHERE username = ?";
         try (PreparedStatement stmt = connection.prepareStatement(findUserSql)) {
@@ -253,4 +222,18 @@ public class DatabaseManager {
         }
         return new ArrayList<>();
     }
+
+    public boolean updateUserCredit(String username, double amount) {
+        if (amount == 0) return false;
+        final String sql = "UPDATE users SET credit = credit + ? WHERE username = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setDouble(1, amount);
+            stmt.setString(2, username);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error in updateUserCredit(username): " + e.getMessage());
+            return false;
+        }
+    }
+
 }
