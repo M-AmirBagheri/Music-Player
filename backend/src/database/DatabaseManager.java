@@ -1,11 +1,21 @@
 package database;
 
-import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import models.User;
+import models.Song;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 public class DatabaseManager {
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/music_app";
+
+   
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/music_app?useSSL=false&serverTimezone=UTC";
     private static final String DB_USER = "root";
     private static final String DB_PASSWORD = "123456789";
 
@@ -14,9 +24,9 @@ public class DatabaseManager {
     public DatabaseManager() {
         try {
             connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-            System.out.println("Connected to MySQL database.");
+            System.out.println("✅ Connected to MySQL database.");
         } catch (SQLException e) {
-            System.err.println("Database connection failed: " + e.getMessage());
+            System.err.println("❌ Database connection failed: " + e.getMessage());
         }
     }
 
@@ -28,27 +38,30 @@ public class DatabaseManager {
         try {
             if (connection != null) {
                 connection.close();
-                System.out.println("Connection closed.");
+                System.out.println("✅ Connection closed.");
             }
         } catch (SQLException e) {
-            System.err.println("Error closing connection: " + e.getMessage());
+            System.err.println("❌ Error closing connection: " + e.getMessage());
         }
     }
 
+   
+
     public User getUser(String username) {
-        String sql = "SELECT * FROM users WHERE username = ?";
+        final String sql = "SELECT * FROM users WHERE username = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, username);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) { 
-                return new User(
-                    rs.getInt("id"),
-                    rs.getString("username"),
-                    rs.getString("email"),
-                    rs.getString("password"),
-                    rs.getDouble("credit"),
-                    rs.getString("subscription")
-                );
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new User(
+                        rs.getInt("id"),
+                        rs.getString("username"),
+                        rs.getString("email"),
+                        rs.getString("password"),
+                        rs.getDouble("credit"),
+                        rs.getString("subscription")
+                    );
+                }
             }
         } catch (SQLException e) {
             System.err.println("Error in getUser(): " + e.getMessage());
@@ -57,36 +70,36 @@ public class DatabaseManager {
     }
 
     public boolean addUser(User user) {
-        String sql = "INSERT INTO users (username, email, password, credit, subscription) VALUES (?, ?, ?, ?, ?)";
+        final String sql =
+            "INSERT INTO users (username, email, password, credit, subscription) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, user.getUsername());
             stmt.setString(2, user.getEmail());
             stmt.setString(3, user.getPassword());
             stmt.setDouble(4, user.getCredit());
             stmt.setString(5, user.getSubscription());
-            int rows = stmt.executeUpdate();
-            return rows > 0;
+            return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("Error in addUser(): " + e.getMessage());
             return false;
         }
     }
 
+    
     public List<Song> getAllSongs() {
         List<Song> songs = new ArrayList<>();
-        String sql = "SELECT * FROM songs";
+        final String sql = "SELECT * FROM songs";
         try (PreparedStatement stmt = connection.prepareStatement(sql);
-            ResultSet rs = stmt.executeQuery()) {
+             ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
-                Song song = new Song(
+                songs.add(new Song(
                     rs.getInt("id"),
                     rs.getString("title"),
                     rs.getString("artist"),
                     rs.getFloat("rating"),
                     rs.getDouble("price"),
                     rs.getString("cover_path")
-                );
-                songs.add(song);
+                ));
             }
         } catch (SQLException e) {
             System.err.println("Error in getAllSongs(): " + e.getMessage());
@@ -94,44 +107,61 @@ public class DatabaseManager {
         return songs;
     }
 
+    
+
     public boolean purchaseSong(String username, int songId) {
-        String findUserSql = "SELECT id, credit FROM users WHERE username = ?";
-        String findSongSql = "SELECT price FROM songs WHERE id = ?";
-        String insertPurchaseSql = "INSERT INTO purchased_songs (user_id, song_id) VALUES (?, ?)";
-        String updateCreditSql = "UPDATE users SET credit = credit - ? WHERE id = ?";
+        final String findUserSql = "SELECT id, credit FROM users WHERE username = ?";
+        final String findSongSql = "SELECT price FROM songs WHERE id = ?";
+        final String insertPurchaseSql = "INSERT INTO purchased_songs (user_id, song_id) VALUES (?, ?)";
+        final String updateCreditSql = "UPDATE users SET credit = credit - ? WHERE id = ?";
 
         try {
-        
-            PreparedStatement userStmt = connection.prepareStatement(findUserSql);
-            userStmt.setString(1, username);
-            ResultSet userRs = userStmt.executeQuery();
+            
+            int userId;
+            double credit;
+            try (PreparedStatement userStmt = connection.prepareStatement(findUserSql)) {
+                userStmt.setString(1, username);
+                try (ResultSet userRs = userStmt.executeQuery()) {
+                    if (!userRs.next()) return false;
+                    userId = userRs.getInt("id");
+                    credit = userRs.getDouble("credit");
+                }
+            }
 
-            if (!userRs.next()) return false;
-            int userId = userRs.getInt("id");
-            double credit = userRs.getDouble("credit");
+            
+            double price;
+            try (PreparedStatement songStmt = connection.prepareStatement(findSongSql)) {
+                songStmt.setInt(1, songId);
+                try (ResultSet songRs = songStmt.executeQuery()) {
+                    if (!songRs.next()) return false;
+                    price = songRs.getDouble("price");
+                }
+            }
 
-        
-            PreparedStatement songStmt = connection.prepareStatement(findSongSql);
-            songStmt.setInt(1, songId);
-            ResultSet songRs = songStmt.executeQuery();
-
-            if (!songRs.next()) return false;
-            double price = songRs.getDouble("price");
-
-        
+            
             if (credit < price) return false;
 
-        
-            PreparedStatement purchaseStmt = connection.prepareStatement(insertPurchaseSql);
-            purchaseStmt.setInt(1, userId);
-            purchaseStmt.setInt(2, songId);
-            purchaseStmt.executeUpdate();
+            
+            boolean oldAutoCommit = connection.getAutoCommit();
+            connection.setAutoCommit(false);
+            try (PreparedStatement purchaseStmt = connection.prepareStatement(insertPurchaseSql);
+                 PreparedStatement updateCreditStmt = connection.prepareStatement(updateCreditSql)) {
 
-        
-            PreparedStatement updateCreditStmt = connection.prepareStatement(updateCreditSql);
-            updateCreditStmt.setDouble(1, price);
-            updateCreditStmt.setInt(2, userId);
-            updateCreditStmt.executeUpdate();
+                purchaseStmt.setInt(1, userId);
+                purchaseStmt.setInt(2, songId);
+                purchaseStmt.executeUpdate();
+
+                updateCreditStmt.setDouble(1, price);
+                updateCreditStmt.setInt(2, userId);
+                updateCreditStmt.executeUpdate();
+
+                connection.commit();
+            } catch (SQLException txErr) {
+                connection.rollback();
+                throw txErr;
+            } finally {
+                connection.setAutoCommit(oldAutoCommit);
+            }
 
             return true;
         } catch (SQLException e) {
@@ -140,31 +170,34 @@ public class DatabaseManager {
         }
     }
 
+    
     public boolean rateSong(int userId, int songId, int rating) {
-        if (rating < 0 || rating > 5) return false; 
+        if (rating < 0 || rating > 5) return false;
 
-        String checkSql = "SELECT id FROM ratings WHERE user_id = ? AND song_id = ?";
-        String insertSql = "INSERT INTO ratings (user_id, song_id, rating) VALUES (?, ?, ?)";
-        String updateSql = "UPDATE ratings SET rating = ? WHERE user_id = ? AND song_id = ?";
+        final String checkSql  = "SELECT id FROM ratings WHERE user_id = ? AND song_id = ?";
+        final String insertSql = "INSERT INTO ratings (user_id, song_id, rating) VALUES (?, ?, ?)";
+        final String updateSql = "UPDATE ratings SET rating = ? WHERE user_id = ? AND song_id = ?";
 
-        try {
-            PreparedStatement checkStmt = connection.prepareStatement(checkSql);
+        try (PreparedStatement checkStmt = connection.prepareStatement(checkSql)) {
             checkStmt.setInt(1, userId);
             checkStmt.setInt(2, songId);
-            ResultSet rs = checkStmt.executeQuery();
 
-            if (rs.next()) {
-                PreparedStatement updateStmt = connection.prepareStatement(updateSql);
-                updateStmt.setInt(1, rating);
-                updateStmt.setInt(2, userId);
-                updateStmt.setInt(3, songId);
-                updateStmt.executeUpdate();
-            } else {
-                PreparedStatement insertStmt = connection.prepareStatement(insertSql);
-                insertStmt.setInt(1, userId);
-                insertStmt.setInt(2, songId);
-                insertStmt.setInt(3, rating);
-                insertStmt.executeUpdate();
+            try (ResultSet rs = checkStmt.executeQuery()) {
+                if (rs.next()) {
+                    try (PreparedStatement updateStmt = connection.prepareStatement(updateSql)) {
+                        updateStmt.setInt(1, rating);
+                        updateStmt.setInt(2, userId);
+                        updateStmt.setInt(3, songId);
+                        updateStmt.executeUpdate();
+                    }
+                } else {
+                    try (PreparedStatement insertStmt = connection.prepareStatement(insertSql)) {
+                        insertStmt.setInt(1, userId);
+                        insertStmt.setInt(2, songId);
+                        insertStmt.setInt(3, rating);
+                        insertStmt.executeUpdate();
+                    }
+                }
             }
 
             return true;
@@ -174,4 +207,50 @@ public class DatabaseManager {
         }
     }
 
+    
+
+    public List<Song> getPurchasedSongs(int userId) {
+        List<Song> songs = new ArrayList<>();
+        final String sql =
+            "SELECT s.id, s.title, s.artist, s.rating, s.price, s.cover_path " +
+            "FROM purchased_songs ps " +
+            "JOIN songs s ON ps.song_id = s.id " +
+            "WHERE ps.user_id = ? " +
+            "ORDER BY ps.purchase_date DESC";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    songs.add(new Song(
+                        rs.getInt("id"),
+                        rs.getString("title"),
+                        rs.getString("artist"),
+                        rs.getFloat("rating"),
+                        rs.getDouble("price"),
+                        rs.getString("cover_path")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error in getPurchasedSongs(userId): " + e.getMessage());
+        }
+        return songs;
+    }
+
+    public List<Song> getPurchasedSongs(String username) {
+        final String findUserSql = "SELECT id FROM users WHERE username = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(findUserSql)) {
+            stmt.setString(1, username);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    int userId = rs.getInt("id");
+                    return getPurchasedSongs(userId);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error in getPurchasedSongs(username): " + e.getMessage());
+        }
+        return new ArrayList<>();
+    }
 }
