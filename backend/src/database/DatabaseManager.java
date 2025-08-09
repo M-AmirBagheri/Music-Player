@@ -107,6 +107,53 @@ public class DatabaseManager {
         }
     }
 
+    public User validateLogin(String identifier, String password) {
+        final String sql = "SELECT * FROM users WHERE (username = ? OR email = ?) AND password = ? LIMIT 1";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, identifier);
+            stmt.setString(2, identifier);
+            stmt.setString(3, password); 
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new User(
+                        rs.getInt("id"),
+                        rs.getString("username"),
+                        rs.getString("email"),
+                        rs.getString("password"),
+                        rs.getDouble("credit"),
+                        rs.getString("subscription")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error in validateLogin(): " + e.getMessage());
+        }
+        return null;
+    }
+
+    public boolean updateUserCredit(String username, double amount) {
+        if (amount == 0) return false;
+        final String sql = "UPDATE users SET credit = credit + ? WHERE username = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setDouble(1, amount);
+            stmt.setString(2, username);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error in updateUserCredit(username): " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean deleteUser(int userId) {
+        final String sql = "DELETE FROM users WHERE id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error in deleteUser(): " + e.getMessage());
+            return false;
+        }
+    }
     
     public List<Song> getAllSongs() {
         List<Song> songs = new ArrayList<>();
@@ -243,19 +290,6 @@ public class DatabaseManager {
             System.err.println("Error in getPurchasedSongs(username): " + e.getMessage());
         }
         return new ArrayList<>();
-    }
-
-    public boolean updateUserCredit(String username, double amount) {
-        if (amount == 0) return false;
-        final String sql = "UPDATE users SET credit = credit + ? WHERE username = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setDouble(1, amount);
-            stmt.setString(2, username);
-            return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Error in updateUserCredit(username): " + e.getMessage());
-            return false;
-        }
     }
 
 }
