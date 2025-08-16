@@ -24,10 +24,13 @@ public class DatabaseManager {
 
     public DatabaseManager() {
         try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
             connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
             System.out.println("✅ Connected to MySQL database.");
         } catch (SQLException e) {
             System.err.println("❌ Database connection failed: " + e.getMessage());
+        } catch (ClassNotFoundException e) {
+            System.err.println("❌ JDBC Driver not found: " + e.getMessage());
         }
     }
 
@@ -366,7 +369,6 @@ public class DatabaseManager {
                         rs.getInt("id"),
                         rs.getInt("song_id"),
                         rs.getInt("user_id"),
-                        rs.getString("username"),
                         rs.getString("text"),
                         rs.getInt("likes"),
                         rs.getInt("dislikes"),
