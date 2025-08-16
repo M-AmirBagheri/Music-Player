@@ -15,12 +15,38 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   bool _obscure = true;
 
+  @override
+  void initState() {
+    super.initState();
+    AuthService().connect(); // Establish WebSocket connection when the page is loaded
+  }
+
   void _handleLogin() {
-    AuthService().login();
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => MusicShopPage()),
-    );
+    String email = _emailController.text;
+    String password = _passwordController.text;
+
+    // Call login method with email and password
+    AuthService().login(email, password);
+
+    AuthService().onEvent('login_response', (data) {
+      if (data['status'] == 'success') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => MusicShopPage()),
+        );
+      } else {
+        // Display error message if login fails
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Login failed: ${data['message']}')),
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    AuthService().disconnect(); // Disconnect WebSocket when leaving the page
+    super.dispose();
   }
 
   @override

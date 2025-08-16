@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/auth_service.dart';
 import '../shop/music_shop_page.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -32,13 +33,32 @@ class _SignUpPageState extends State<SignUpPage> {
         const SnackBar(content: Text('Signing up...')),
       );
 
-      Future.delayed(const Duration(seconds: 1), () {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => MusicShopPage()),
-        );
+      String username = _usernameController.text;
+      String email = _emailController.text;
+      String password = _passwordController.text;
+
+      AuthService().connect();
+      AuthService().login(email, password);
+
+      AuthService().onEvent('sign_up_response', (data) {
+        if (data['status'] == 'success') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => MusicShopPage()),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Sign up failed: ${data['message']}')),
+          );
+        }
       });
     }
+  }
+
+  @override
+  void dispose() {
+    AuthService().disconnect();
+    super.dispose();
   }
 
   @override
