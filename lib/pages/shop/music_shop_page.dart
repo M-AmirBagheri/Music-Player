@@ -1,97 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/theme_provider.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../profile/profile_page.dart';
 import 'shop_song_list_page.dart';
 
-class MusicShopPage extends StatelessWidget {
-  MusicShopPage({super.key});
+class MusicShopPage extends StatefulWidget {
+  const MusicShopPage({super.key});
 
-  final List<Map<String, dynamic>> categories = [
-    {
-      'title': 'Iranian',
-      'subtitle': 'Persian classics & pop',
-      'image': 'assets/images/iran.jpg',
-      'songs': [
-        {
-          'title': 'Soltane Ghalbha',
-          'artist': 'Vigen',
-          'image': 'https://i.imgur.com/abc1.jpg',
-        },
-        {
-          'title': 'Bahar Bahar',
-          'artist': 'Ebi',
-          'image': 'https://i.imgur.com/abc2.jpg',
-        },
-      ],
-    },
-    {
-      'title': 'International',
-      'subtitle': 'Global chart hits',
-      'image': 'assets/images/international.jpg',
-      'songs': [
-        {
-          'title': 'Shape of You',
-          'artist': 'Ed Sheeran',
-          'image': 'https://i.imgur.com/xyz1.jpg',
-        },
-        {
-          'title': 'Blinding Lights',
-          'artist': 'The Weeknd',
-          'image': 'https://i.imgur.com/xyz2.jpg',
-        },
-      ],
-    },
-    {
-      'title': 'Local',
-      'subtitle': 'Regional folk vibes',
-      'image': 'assets/images/local.jpg',
-      'songs': [
-        {
-          'title': 'Shomal',
-          'artist': 'Mohsen Yeganeh',
-          'image': 'https://i.imgur.com/def1.jpg',
-        },
-      ],
-    },
-    {
-      'title': 'New',
-      'subtitle': 'Fresh new releases',
-      'image': 'assets/images/new.jpg',
-      'songs': [
-        {
-          'title': 'New Life',
-          'artist': 'Ali Sorena',
-          'image': 'https://i.imgur.com/new1.jpg',
-        },
-      ],
-    },
-  ];
+  @override
+  State<MusicShopPage> createState() => _MusicShopPageState();
+}
 
-  final List<Map<String, String>> spotifyGenres = [
-    {
-      'title': 'Electronic',
-      'image': 'assets/images/electronic.jpg',
-      'url': 'https://open.spotify.com/genre/electronic-page',
-    },
-    {
-      'title': 'Jazz',
-      'image': 'assets/images/jazz.jpg',
-      'url': 'https://open.spotify.com/genre/jazz-page',
-    },
-    {
-      'title': 'Workout',
-      'image': 'assets/images/workout.jpg',
-      'url': 'https://open.spotify.com/genre/workout-page',
-    },
-    {
-      'title': 'Classic',
-      'image': 'assets/images/classic.jpg',
-      'url': 'https://open.spotify.com/genre/study-page',
-    },
-  ];
+class _MusicShopPageState extends State<MusicShopPage> {
+  List<Map<String, dynamic>> categories = [];
+  List<Map<String, String>> spotifyGenres = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDataFromServer();
+  }
+
+  void _fetchDataFromServer() {
+    // Connect to WebSocket
+    AuthService().connect();
+
+    // Listen to category data response
+    AuthService().onEvent('categories_response', (data) {
+      setState(() {
+        categories = List<Map<String, dynamic>>.from(data);
+      });
+    });
+
+    // Listen to Spotify genre data response
+    AuthService().onEvent('spotify_genres_response', (data) {
+      setState(() {
+        spotifyGenres = List<Map<String, String>>.from(data);
+      });
+    });
+
+    // Request category data from the server
+    AuthService().emitEvent('get_categories', {});
+
+    // Request Spotify genre data from the server
+    AuthService().emitEvent('get_spotify_genres', {});
+  }
+
+  @override
+  void dispose() {
+    AuthService().disconnect(); // Disconnect WebSocket when leaving the page
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -154,7 +116,7 @@ class MusicShopPage extends StatelessWidget {
 
               const SizedBox(height: 24),
 
-              // Genres section (linked to ShopSongListPage)
+              // Categories section (linked to ShopSongListPage)
               Text('Genres', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
               const SizedBox(height: 16),
 

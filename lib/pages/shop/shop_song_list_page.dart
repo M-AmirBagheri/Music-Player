@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../services/auth_service.dart';
 import 'shop_song_detail_page.dart';
+import '../../widgets/theme_provider.dart';
 
-class ShopSongListPage extends StatelessWidget {
+class ShopSongListPage extends StatefulWidget {
   final String category;
   final List<Map<String, dynamic>> songs;
 
@@ -10,6 +13,40 @@ class ShopSongListPage extends StatelessWidget {
     required this.category,
     required this.songs,
   });
+
+  @override
+  State<ShopSongListPage> createState() => _ShopSongListPageState();
+}
+
+class _ShopSongListPageState extends State<ShopSongListPage> {
+  List<Map<String, dynamic>> songs = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSongsFromServer();
+  }
+
+  void _fetchSongsFromServer() {
+    // Connect to WebSocket
+    AuthService().connect();
+
+    // Listen for the response of the songs data from the server
+    AuthService().onEvent('songs_response', (data) {
+      setState(() {
+        songs = List<Map<String, dynamic>>.from(data);
+      });
+    });
+
+    // Request songs data from the server
+    AuthService().emitEvent('get_songs', {'category': widget.category});
+  }
+
+  @override
+  void dispose() {
+    AuthService().disconnect(); // Disconnect WebSocket when leaving the page
+    super.dispose();
+  }
 
   Color _getCategoryColor(String cat) {
     switch (cat) {
@@ -43,7 +80,7 @@ class ShopSongListPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textColor = Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.white;
+    final textColor = Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -51,15 +88,15 @@ class ShopSongListPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // هدر تصویری
+            // Header section with image
             Container(
               height: 350,
               width: double.infinity,
               decoration: BoxDecoration(
-                color: _getCategoryColor(category), // رنگ بک‌گراند
+                color: _getCategoryColor(widget.category),
                 image: DecorationImage(
-                  image: AssetImage(_getHeaderImage(category)),
-                  fit: BoxFit.contain, // ← تصویر در مرکز، بدون کراپ شدن
+                  image: AssetImage(_getHeaderImage(widget.category)),
+                  fit: BoxFit.contain,
                   alignment: Alignment.center,
                 ),
                 borderRadius: const BorderRadius.only(
@@ -72,7 +109,7 @@ class ShopSongListPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ردیف آیکون بالا
+                    // Row with top icons
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -95,7 +132,7 @@ class ShopSongListPage extends StatelessWidget {
             ),
             const SizedBox(height: 8),
 
-            // لیست آهنگ‌ها
+            // Song List section
             Expanded(
               child: ListView.builder(
                 itemCount: songs.length,

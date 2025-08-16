@@ -27,6 +27,10 @@ class AuthService {
     });
   }
 
+  void emitEvent(String event, dynamic data) {
+    socket.emit(event, data); // ارسال داده‌ها به سرور
+  }
+
   void login(String username, String password) {
     socket.emit('login', {
       'username': username,

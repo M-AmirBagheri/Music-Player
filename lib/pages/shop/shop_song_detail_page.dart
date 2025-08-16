@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../payment/payment_page.dart';
+import '../../services/auth_service.dart';
 
 class ShopSongDetailPage extends StatefulWidget {
   final Map<String, dynamic> song;
@@ -16,11 +17,35 @@ class _ShopSongDetailPageState extends State<ShopSongDetailPage> {
   final List<Map<String, dynamic>> comments = [];
   bool isDownloaded = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _fetchCommentsFromServer();
+  }
+
+  void _fetchCommentsFromServer() {
+    // Connect to WebSocket
+    AuthService().connect();
+
+    // Listen for comment data response
+    AuthService().onEvent('comments_response', (data) {
+      setState(() {
+        comments.clear();
+        comments.addAll(List<Map<String, dynamic>>.from(data));
+      });
+    });
+
+    // Request comments for this song
+    AuthService().emitEvent('get_comments', {'song_id': widget.song['id']});
+  }
+
   void _downloadSong() {
     setState(() => isDownloaded = true);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Download started...")),
     );
+    // Send a request to the server to mark the song as downloaded
+    AuthService().emitEvent('download_song', {'song_id': widget.song['id']});
   }
 
   void _submitComment() {
@@ -32,6 +57,12 @@ class _ShopSongDetailPageState extends State<ShopSongDetailPage> {
         'dislikes': 0,
       });
       _commentController.clear();
+    });
+
+    // Send the new comment to the server
+    AuthService().emitEvent('submit_comment', {
+      'song_id': widget.song['id'],
+      'comment': _commentController.text.trim(),
     });
   }
 
@@ -168,12 +199,12 @@ class _ShopSongDetailPageState extends State<ShopSongDetailPage> {
                         label: const Text("Buy Now"),
                       ),
                     OutlinedButton.icon(
-                      onPressed: () {},
+                      onPressed: () {} ,
                       icon: const Icon(Icons.favorite_border),
                       label: const Text("Favorite"),
                     ),
                     OutlinedButton.icon(
-                      onPressed: () {},
+                      onPressed: () {} ,
                       icon: const Icon(Icons.share),
                       label: const Text("Share"),
                     ),
