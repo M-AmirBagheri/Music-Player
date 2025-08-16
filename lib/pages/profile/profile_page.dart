@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../payment/payment_page.dart';
+import '../../services/auth_service.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -54,6 +55,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 username = nameController.text.trim();
                 email = emailController.text.trim();
               });
+              // Send the edited profile data to the server via WebSocket
+              AuthService().emitEvent('edit_profile', {'username': username, 'email': email});
               Navigator.pop(ctx);
             },
             child: const Text("Save"),
@@ -88,6 +91,8 @@ class _ProfilePageState extends State<ProfilePage> {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
           TextButton(
             onPressed: () {
+              // Send request to the server to delete the account
+              AuthService().emitEvent('delete_account', {'username': username});
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text("Account deleted.")),

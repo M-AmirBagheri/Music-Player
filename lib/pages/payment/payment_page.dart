@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/auth_service.dart';
 
 class PaymentPage extends StatefulWidget {
   final Map<String, dynamic> song;
@@ -17,6 +18,28 @@ class _PaymentPageState extends State<PaymentPage> {
   final String validPin = "1234";
   String? errorText;
   bool paymentSuccess = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _setupPaymentListener();
+  }
+
+  void _setupPaymentListener() {
+    // Connect to WebSocket
+    AuthService().connect();
+
+    // Listen for payment success response
+    AuthService().onEvent('payment_response', (data) {
+      setState(() {
+        if (data['status'] == 'success') {
+          paymentSuccess = true;
+        } else {
+          errorText = 'Payment failed: ${data['message']}';
+        }
+      });
+    });
+  }
 
   void _pay() {
     final card = _cardController.text.trim();
@@ -41,12 +64,31 @@ class _PaymentPageState extends State<PaymentPage> {
 
     setState(() {
       errorText = null;
-      paymentSuccess = true;
+      paymentSuccess = false;
     });
 
-    Future.delayed(const Duration(seconds: 2), () {
-      Navigator.pop(context, amount);
+    // Send payment request to the server
+    AuthService().emitEvent('process_payment', {
+      'song_id': widget.song['id'],
+      'amount': amount,
+      'card': card,
+      'pin': pin,
     });
+
+    // Simulating a delay for payment process
+    Future.delayed(const Duration(seconds: 2), () {
+      if (paymentSuccess) {
+        Navigator.pop(context, amount);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _cardController.dispose();
+    _pinController.dispose();
+    _amountController.dispose();
+    super.dispose();
   }
 
   @override
@@ -126,13 +168,5 @@ class _PaymentPageState extends State<PaymentPage> {
         borderSide: BorderSide.none,
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _cardController.dispose();
-    _pinController.dispose();
-    _amountController.dispose();
-    super.dispose();
   }
 }
