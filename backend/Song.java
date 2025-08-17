@@ -1,5 +1,3 @@
-package models;
-
 public class Song {
     private int id;
     private String title;

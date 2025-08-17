@@ -1,5 +1,3 @@
-package models;
-
 public class PurchasedSong {
     private int id;
     private int userId;

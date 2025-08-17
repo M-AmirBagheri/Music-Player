@@ -27,7 +27,7 @@ class _LoginPageState extends State<LoginPage> {
   // Connect to the server using Socket
   Future<void> _connectToServer() async {
     try {
-      _socket = await Socket.connect('localhost', 12345);
+      _socket = await Socket.connect('172.20.10.3', 12345);
       print('Connected to server');
 
       // Listen for server responses

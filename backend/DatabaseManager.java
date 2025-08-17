@@ -1,11 +1,6 @@
-package database;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import models.User;
-import models.Song;
-import models.Comment;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -15,7 +10,7 @@ import java.sql.SQLException;
 
 public class DatabaseManager {
 
-   
+
     private static final String DB_URL = "jdbc:mysql://localhost:3306/music_app?useSSL=false&serverTimezone=UTC";
     private static final String DB_USER = "root";
     private static final String DB_PASSWORD = "123456789";
@@ -49,7 +44,7 @@ public class DatabaseManager {
         }
     }
 
-   
+
 
     public User getUser(String username) {
         final String sql = "SELECT * FROM users WHERE username = ?";
@@ -58,12 +53,12 @@ public class DatabaseManager {
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return new User(
-                        rs.getInt("id"),
-                        rs.getString("username"),
-                        rs.getString("email"),
-                        rs.getString("password"),
-                        rs.getDouble("credit"),
-                        rs.getString("subscription")
+                            rs.getInt("id"),
+                            rs.getString("username"),
+                            rs.getString("email"),
+                            rs.getString("password"),
+                            rs.getDouble("credit"),
+                            rs.getString("subscription")
                     );
                 }
             }
@@ -73,7 +68,7 @@ public class DatabaseManager {
         return null;
     }
 
-     public boolean isUsernameTaken(String username) {
+    public boolean isUsernameTaken(String username) {
         final String sql = "SELECT 1 FROM users WHERE username = ? LIMIT 1";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, username);
@@ -97,7 +92,7 @@ public class DatabaseManager {
 
     public boolean addUser(User user) {
         final String sql =
-            "INSERT INTO users (username, email, password, credit, subscription) VALUES (?, ?, ?, ?, ?)";
+                "INSERT INTO users (username, email, password, credit, subscription) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, user.getUsername());
             stmt.setString(2, user.getEmail());
@@ -116,16 +111,16 @@ public class DatabaseManager {
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, identifier);
             stmt.setString(2, identifier);
-            stmt.setString(3, password); 
+            stmt.setString(3, password);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return new User(
-                        rs.getInt("id"),
-                        rs.getString("username"),
-                        rs.getString("email"),
-                        rs.getString("password"),
-                        rs.getDouble("credit"),
-                        rs.getString("subscription")
+                            rs.getInt("id"),
+                            rs.getString("username"),
+                            rs.getString("email"),
+                            rs.getString("password"),
+                            rs.getDouble("credit"),
+                            rs.getString("subscription")
                     );
                 }
             }
@@ -158,10 +153,10 @@ public class DatabaseManager {
             return false;
         }
     }
-    
 
 
-    
+
+
     public List<Song> getAllSongs() {
         List<Song> songs = new ArrayList<>();
         final String sql = "SELECT * FROM songs";
@@ -169,12 +164,12 @@ public class DatabaseManager {
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 songs.add(new Song(
-                    rs.getInt("id"),
-                    rs.getString("title"),
-                    rs.getString("artist"),
-                    rs.getFloat("rating"),
-                    rs.getDouble("price"),
-                    rs.getString("cover_path")
+                        rs.getInt("id"),
+                        rs.getString("title"),
+                        rs.getString("artist"),
+                        rs.getFloat("rating"),
+                        rs.getDouble("price"),
+                        rs.getString("cover_path")
                 ));
             }
         } catch (SQLException e) {
@@ -194,14 +189,14 @@ public class DatabaseManager {
         }
     }
 
-     public boolean purchaseSong(String username, int songId) {
+    public boolean purchaseSong(String username, int songId) {
         final String findUserSql = "SELECT id, credit FROM users WHERE username = ?";
         final String findSongSql = "SELECT price FROM songs WHERE id = ?";
         final String insertPurchaseSql = "INSERT INTO purchased_songs (user_id, song_id) VALUES (?, ?)";
         final String updateCreditSql = "UPDATE users SET credit = credit - ? WHERE id = ?";
 
         try {
-           
+
             int userId; double credit;
             try (PreparedStatement s = connection.prepareStatement(findUserSql)) {
                 s.setString(1, username);
@@ -212,7 +207,7 @@ public class DatabaseManager {
                 }
             }
 
-           
+
             double price;
             try (PreparedStatement s = connection.prepareStatement(findSongSql)) {
                 s.setInt(1, songId);
@@ -246,24 +241,24 @@ public class DatabaseManager {
             return false;
         }
     }
-    
+
     public List<Song> getPurchasedSongs(int userId) {
         List<Song> songs = new ArrayList<>();
         final String sql =
-            "SELECT s.id, s.title, s.artist, s.rating, s.price, s.cover_path " +
-            "FROM purchased_songs ps JOIN songs s ON ps.song_id = s.id " +
-            "WHERE ps.user_id = ? ORDER BY ps.purchase_date DESC";
+                "SELECT s.id, s.title, s.artist, s.rating, s.price, s.cover_path " +
+                        "FROM purchased_songs ps JOIN songs s ON ps.song_id = s.id " +
+                        "WHERE ps.user_id = ? ORDER BY ps.purchase_date DESC";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, userId);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     songs.add(new Song(
-                        rs.getInt("id"),
-                        rs.getString("title"),
-                        rs.getString("artist"),
-                        rs.getFloat("rating"),
-                        rs.getDouble("price"),
-                        rs.getString("cover_path")
+                            rs.getInt("id"),
+                            rs.getString("title"),
+                            rs.getString("artist"),
+                            rs.getFloat("rating"),
+                            rs.getDouble("price"),
+                            rs.getString("cover_path")
                     ));
                 }
             }
@@ -335,7 +330,7 @@ public class DatabaseManager {
 
 
 
-     public boolean addComment(int userId, int songId, String text) {
+    public boolean addComment(int userId, int songId, String text) {
         if (text == null || text.trim().isEmpty()) return false;
         final String sql = "INSERT INTO comments (song_id, user_id, text) VALUES (?, ?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -355,10 +350,10 @@ public class DatabaseManager {
         else if ("most_dislikes".equalsIgnoreCase(sortBy)) order = "c.dislikes DESC, c.created_at DESC";
 
         final String sql =
-            "SELECT c.id, c.song_id, c.user_id, u.username, c.text, c.likes, c.dislikes, c.created_at " +
-            "FROM comments c JOIN users u ON c.user_id = u.id " +
-            "WHERE c.song_id = ? " +
-            "ORDER BY " + order;
+                "SELECT c.id, c.song_id, c.user_id, u.username, c.text, c.likes, c.dislikes, c.created_at " +
+                        "FROM comments c JOIN users u ON c.user_id = u.id " +
+                        "WHERE c.song_id = ? " +
+                        "ORDER BY " + order;
 
         List<Comment> list = new ArrayList<>();
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -366,13 +361,13 @@ public class DatabaseManager {
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     list.add(new Comment(
-                        rs.getInt("id"),
-                        rs.getInt("song_id"),
-                        rs.getInt("user_id"),
-                        rs.getString("text"),
-                        rs.getInt("likes"),
-                        rs.getInt("dislikes"),
-                        rs.getString("created_at")
+                            rs.getInt("id"),
+                            rs.getInt("song_id"),
+                            rs.getInt("user_id"),
+                            rs.getString("text"),
+                            rs.getInt("likes"),
+                            rs.getInt("dislikes"),
+                            rs.getString("created_at")
                     ));
                 }
             }
@@ -388,8 +383,8 @@ public class DatabaseManager {
         String updateSql = "UPDATE comment_votes SET vote_type = ? WHERE comment_id = ? AND user_id = ?";
 
         String updateLikeCount = like
-            ? "UPDATE comments SET likes = likes + 1, dislikes = CASE WHEN dislikes > 0 AND ? = 'dislike' THEN dislikes - 1 ELSE dislikes END WHERE id = ?"
-            : "UPDATE comments SET dislikes = dislikes + 1, likes = CASE WHEN likes > 0 AND ? = 'like' THEN likes - 1 ELSE likes END WHERE id = ?";
+                ? "UPDATE comments SET likes = likes + 1, dislikes = CASE WHEN dislikes > 0 AND ? = 'dislike' THEN dislikes - 1 ELSE dislikes END WHERE id = ?"
+                : "UPDATE comments SET dislikes = dislikes + 1, likes = CASE WHEN likes > 0 AND ? = 'like' THEN likes - 1 ELSE likes END WHERE id = ?";
 
         try {
             String prevVote = null;

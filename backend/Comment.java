@@ -1,5 +1,3 @@
-package models;
-
 public class Comment {
     private int id;
     private int userId;

@@ -1,10 +1,8 @@
-package models;
-
 public class Rating {
     private int id;
     private int userId;
     private int songId;
-    private int rating;  
+    private int rating;
 
     public Rating(int id, int userId, int songId, int rating) {
         this.id = id;

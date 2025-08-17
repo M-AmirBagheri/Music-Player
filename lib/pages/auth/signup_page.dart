@@ -34,31 +34,37 @@ class _SignUpPageState extends State<SignUpPage> {
   // Connect to the server using Socket
   Future<void> _connectToServer() async {
     try {
-      _socket = await Socket.connect('localhost', 12345);
-      print('Connected to server');
+      _socket = await Socket.connect('172.20.10.3', 12345);  // IP of your laptop
+      debugPrint('Connected to server');
 
       // Listen for server responses
       _socket.listen((data) {
         String response = String.fromCharCodes(data);
-        print('Received from server: $response');
+        debugPrint('Received from server: $response');
 
         // Handle sign-up response from server
         if (response.startsWith('SIGNUP_SUCCESS')) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => MusicShopPage()),
-          );
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => MusicShopPage()),
+            );
+          }
         } else if (response.startsWith('ERROR')) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Sign-up failed: $response')),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Sign-up failed: $response')),
+            );
+          }
         }
       });
     } catch (e) {
-      print('Error connecting to server: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to connect to server')),
-      );
+      debugPrint('Error connecting to server: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to connect to server')),
+        );
+      }
     }
   }
 
@@ -73,11 +79,19 @@ class _SignUpPageState extends State<SignUpPage> {
       String email = _emailController.text;
       String password = _passwordController.text;
 
-      _connectToServer(); // Establish connection to the server
-
-      // Send sign-up request to server
-      String signUpMessage = 'SIGNUP;$username;$email;$password';
-      _socket.write(signUpMessage);
+      // Ensure socket is connected before sending data
+      if (_socket != null && _socket.remoteAddress != null) {
+        // Send sign-up request to server
+        String signUpMessage = 'SIGNUP;$username;$email;$password';
+        _socket.write(signUpMessage);
+        debugPrint('Sign-up data sent: $username, $email');
+      } else {
+        print('Socket is not connected!');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Please wait for the connection to be established')),
+        );
+        _connectToServer(); // Try connecting again if not connected
+      }
     }
   }
 

@@ -1,26 +1,20 @@
-package server;
-
-import database.DatabaseManager;
-import models.Song;
 import java.io.*;
 import java.net.*;
 import java.util.List;
 
 public class MusicServer {
     private static final int PORT = 12345;
-    private static final String SERVER_HOST = "localhost";
+    private static final String SERVER_HOST = "10.0.2.2";
     private ServerSocket serverSocket;
     private DatabaseManager db;
 
     public MusicServer() {
         try {
-           
             db = new DatabaseManager();
-            
+
             serverSocket = new ServerSocket(PORT);
             System.out.println("Server is running on port " + PORT);
 
-            
             while (true) {
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("New client connected: " + clientSocket.getInetAddress());
@@ -33,6 +27,6 @@ public class MusicServer {
     }
 
     public static void main(String[] args) {
-        new MusicServer();  
+        new MusicServer();
     }
 }

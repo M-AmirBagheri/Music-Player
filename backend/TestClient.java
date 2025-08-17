@@ -3,8 +3,8 @@ import java.net.Socket;
 
 public class TestClient {
     public static void main(String[] args) {
-        String serverAddress = "localhost";  // آدرس سرور (برای لوکال)
-        int port = 12345;  // پورت سرور شما
+        String serverAddress = "localhost";  
+        int port = 12345;  
 
         try (
             Socket socket = new Socket(serverAddress, port);
