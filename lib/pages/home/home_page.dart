@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import '../../services/audio_manager.dart';
+import '../../services/favorites_service.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../profile/profile_page.dart';
 import '../profile/settings_page.dart';
@@ -33,16 +34,29 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     _tabController.addListener(() {
       double screenWidth = MediaQuery.of(context).size.width;
       double offset = (_tabController.index * 100.0) - screenWidth / 2 + 50;
-      _tabScrollController.animateTo(offset, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+      _tabScrollController.animateTo(
+        offset,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
     });
 
-    _audioQuery.permissionsStatus().then((status) async {
-      if (!status) await _audioQuery.permissionsRequest();
-      final songs = await _audioQuery.querySongs();
-      setState(() => _allSongs = songs);
-    });
-
+    _loadSongs();
     _audioManager.addListener(_onAudioChange);
+  }
+
+  Future<void> _loadSongs() async {
+    final status = await _audioQuery.permissionsStatus();
+    if (!status) await _audioQuery.permissionsRequest();
+
+    final songs = await _audioQuery.querySongs();
+    _allSongs = songs;
+
+    // 🔑 اینجا FavoriteService رو مقداردهی اولیه می‌کنیم
+    FavoritesService.instance.setAllSongs(_allSongs);
+    await FavoritesService.instance.loadFavorites();
+
+    setState(() {});
   }
 
   void _onAudioChange() {
@@ -76,7 +90,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     showModalBottomSheet(
       context: context,
       backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       builder: (context) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -119,7 +135,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   child: Text(
                     labels[index],
                     style: TextStyle(
-                      color: isSelected ? Theme.of(context).colorScheme.secondary : Colors.grey,
+                      color: isSelected
+                          ? Theme.of(context).colorScheme.secondary
+                          : Colors.grey,
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
@@ -354,7 +372,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     fillColor: Theme.of(context).brightness == Brightness.dark
                         ? Theme.of(context).colorScheme.surface
                         : Colors.white,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
               ),
@@ -364,7 +385,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 margin: const EdgeInsets.only(top: 10),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.light ? Colors.white : Theme.of(context).colorScheme.surface,
+                  color: Theme.of(context).brightness == Brightness.light
+                      ? Colors.white
+                      : Theme.of(context).colorScheme.surface,
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                 ),
                 child: TabBarView(
