@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
@@ -20,31 +22,47 @@ class ShopSongListPage extends StatefulWidget {
 
 class _ShopSongListPageState extends State<ShopSongListPage> {
   List<Map<String, dynamic>> songs = [];
+  late Socket _socket;
 
   @override
   void initState() {
     super.initState();
-    _fetchSongsFromServer();
+    _connectToServer(); // Connect to server when page is loaded
   }
 
-  void _fetchSongsFromServer() {
-    // Connect to WebSocket
-    AuthService().connect();
+  // Connect to the server using Socket
+  Future<void> _connectToServer() async {
+    try {
+      _socket = await Socket.connect('localhost', 12345);
+      print('Connected to server');
 
-    // Listen for the response of the songs data from the server
-    AuthService().onEvent('songs_response', (data) {
-      setState(() {
-        songs = List<Map<String, dynamic>>.from(data);
+      // Listen for server responses
+      _socket.listen((data) {
+        String response = String.fromCharCodes(data);
+        print('Received from server: $response');
+
+        // Handle songs data response
+        if (response.startsWith('songs_response')) {
+          var dataList = jsonDecode(response.substring(16)); // Extract JSON data
+          setState(() {
+            songs = List<Map<String, dynamic>>.from(dataList);
+          });
+        }
       });
-    });
 
-    // Request songs data from the server
-    AuthService().emitEvent('get_songs', {'category': widget.category});
+      // Request songs data from the server
+      _socket.write('get_songs_by_category;${widget.category}');
+    } catch (e) {
+      print('Error connecting to server: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to connect to server')),
+      );
+    }
   }
 
   @override
   void dispose() {
-    AuthService().disconnect(); // Disconnect WebSocket when leaving the page
+    _socket.close(); // Close the socket connection when leaving the page
     super.dispose();
   }
 

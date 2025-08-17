@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
 import '../shop/music_shop_page.dart';
@@ -19,6 +21,8 @@ class _SignUpPageState extends State<SignUpPage> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
+  late Socket _socket;
+
   void _togglePasswordVisibility() {
     setState(() => _obscurePassword = !_obscurePassword);
   }
@@ -27,6 +31,38 @@ class _SignUpPageState extends State<SignUpPage> {
     setState(() => _obscureConfirmPassword = !_obscureConfirmPassword);
   }
 
+  // Connect to the server using Socket
+  Future<void> _connectToServer() async {
+    try {
+      _socket = await Socket.connect('localhost', 12345);
+      print('Connected to server');
+
+      // Listen for server responses
+      _socket.listen((data) {
+        String response = String.fromCharCodes(data);
+        print('Received from server: $response');
+
+        // Handle sign-up response from server
+        if (response.startsWith('SIGNUP_SUCCESS')) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => MusicShopPage()),
+          );
+        } else if (response.startsWith('ERROR')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Sign-up failed: $response')),
+          );
+        }
+      });
+    } catch (e) {
+      print('Error connecting to server: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to connect to server')),
+      );
+    }
+  }
+
+  // Handle Sign-Up process
   void _signUp() {
     if (_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -37,27 +73,17 @@ class _SignUpPageState extends State<SignUpPage> {
       String email = _emailController.text;
       String password = _passwordController.text;
 
-      AuthService().connect();
-      AuthService().login(email, password);
+      _connectToServer(); // Establish connection to the server
 
-      AuthService().onEvent('sign_up_response', (data) {
-        if (data['status'] == 'success') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => MusicShopPage()),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Sign up failed: ${data['message']}')),
-          );
-        }
-      });
+      // Send sign-up request to server
+      String signUpMessage = 'SIGNUP;$username;$email;$password';
+      _socket.write(signUpMessage);
     }
   }
 
   @override
   void dispose() {
-    AuthService().disconnect();
+    _socket.close(); // Close the socket connection when leaving the page
     super.dispose();
   }
 

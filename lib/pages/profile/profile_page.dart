@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../payment/payment_page.dart';
@@ -24,6 +25,8 @@ class _ProfilePageState extends State<ProfilePage> {
   final List<String> plans = ['Monthly', '3 Months', 'Yearly'];
 
   static const Color primaryPurple = Color(0xFF9C27B0);
+
+  late Socket _socket;
 
   void _pickImage() async {
     final picked = await _picker.pickImage(source: ImageSource.gallery);
@@ -56,7 +59,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 email = emailController.text.trim();
               });
               // Send the edited profile data to the server via WebSocket
-              AuthService().emitEvent('edit_profile', {'username': username, 'email': email});
+              _socket.write(jsonEncode({'event': 'edit_profile', 'username': username, 'email': email}));
               Navigator.pop(ctx);
             },
             child: const Text("Save"),
@@ -92,7 +95,7 @@ class _ProfilePageState extends State<ProfilePage> {
           TextButton(
             onPressed: () {
               // Send request to the server to delete the account
-              AuthService().emitEvent('delete_account', {'username': username});
+              _socket.write(jsonEncode({'event': 'delete_account', 'username': username}));
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text("Account deleted.")),
@@ -103,6 +106,65 @@ class _ProfilePageState extends State<ProfilePage> {
         ],
       ),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _connectToServer();  // Connect to server when page is loaded
+  }
+
+  // Connect to the server using Socket
+  Future<void> _connectToServer() async {
+    try {
+      _socket = await Socket.connect('localhost', 12345);
+      print('Connected to server');
+
+      // Listen for server responses
+      _socket.listen((data) {
+        String response = String.fromCharCodes(data);
+        print('Received from server: $response');
+
+        // Handle responses from server
+        if (response.startsWith('edit_profile_response')) {
+          var responseData = jsonDecode(response.substring(22));
+          if (responseData['status'] == 'success') {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Profile updated successfully.')),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to update profile: ${responseData['message']}')),
+            );
+          }
+        }
+
+        if (response.startsWith('delete_account_response')) {
+          var responseData = jsonDecode(response.substring(24));
+          if (responseData['status'] == 'success') {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Account deleted successfully.')),
+            );
+            Navigator.pop(context); // Go back to previous screen after deletion
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to delete account: ${responseData['message']}')),
+            );
+          }
+        }
+      });
+    } catch (e) {
+      print('Error connecting to server: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to connect to server')),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _socket.close(); // Close the socket connection when leaving the page
+    super.dispose();
   }
 
   @override
@@ -124,7 +186,7 @@ class _ProfilePageState extends State<ProfilePage> {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            // پروفایل با عکس انتخاب‌شده
+            // Profile with selected image
             Stack(
               alignment: Alignment.bottomRight,
               children: [

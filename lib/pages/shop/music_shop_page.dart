@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -17,41 +19,58 @@ class MusicShopPage extends StatefulWidget {
 class _MusicShopPageState extends State<MusicShopPage> {
   List<Map<String, dynamic>> categories = [];
   List<Map<String, String>> spotifyGenres = [];
+  late Socket _socket;
 
   @override
   void initState() {
     super.initState();
-    _fetchDataFromServer();
+    _connectToServer();  // Connect to server and fetch data
   }
 
-  void _fetchDataFromServer() {
-    // Connect to WebSocket
-    AuthService().connect();
+  // Connect to the server using Socket
+  Future<void> _connectToServer() async {
+    try {
+      _socket = await Socket.connect('localhost', 12345);
+      print('Connected to server');
 
-    // Listen to category data response
-    AuthService().onEvent('categories_response', (data) {
-      setState(() {
-        categories = List<Map<String, dynamic>>.from(data);
+      // Listen for server responses
+      _socket.listen((data) {
+        String response = String.fromCharCodes(data);
+        print('Received from server: $response');
+
+        // Handle category data response
+        if (response.startsWith('categories_response')) {
+          var dataList = jsonDecode(response.substring(21)); // Extract JSON data
+          setState(() {
+            categories = List<Map<String, dynamic>>.from(dataList);
+          });
+        }
+
+        // Handle Spotify genre data response
+        if (response.startsWith('spotify_genres_response')) {
+          var dataList = jsonDecode(response.substring(24)); // Extract JSON data
+          setState(() {
+            spotifyGenres = List<Map<String, String>>.from(dataList);
+          });
+        }
       });
-    });
 
-    // Listen to Spotify genre data response
-    AuthService().onEvent('spotify_genres_response', (data) {
-      setState(() {
-        spotifyGenres = List<Map<String, String>>.from(data);
-      });
-    });
+      // Request category data from the server
+      _socket.write('get_categories');
 
-    // Request category data from the server
-    AuthService().emitEvent('get_categories', {});
-
-    // Request Spotify genre data from the server
-    AuthService().emitEvent('get_spotify_genres', {});
+      // Request Spotify genre data from the server
+      _socket.write('get_spotify_genres');
+    } catch (e) {
+      print('Error connecting to server: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to connect to server')),
+      );
+    }
   }
 
   @override
   void dispose() {
-    AuthService().disconnect(); // Disconnect WebSocket when leaving the page
+    _socket.close(); // Close the socket connection when leaving the page
     super.dispose();
   }
 

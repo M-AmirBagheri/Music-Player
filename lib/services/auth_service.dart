@@ -25,6 +25,12 @@ class AuthService {
     socket.onDisconnect((_) {
       print('Disconnected from WebSocket server');
     });
+
+    // Handle errors
+    socket.onError((error) {
+      print('Socket Error: $error');
+      // Optionally, show a Snackbar or other UI element to notify the user
+    });
   }
 
   void emitEvent(String event, dynamic data) {

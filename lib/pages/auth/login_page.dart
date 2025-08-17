@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
 import 'signup_page.dart';
@@ -14,38 +16,59 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscure = true;
+  late Socket _socket;
 
   @override
   void initState() {
     super.initState();
-    AuthService().connect(); // Establish WebSocket connection when the page is loaded
+    _connectToServer(); // Connect to the server when the page is loaded
+  }
+
+  // Connect to the server using Socket
+  Future<void> _connectToServer() async {
+    try {
+      _socket = await Socket.connect('localhost', 12345);
+      print('Connected to server');
+
+      // Listen for server responses
+      _socket.listen((data) {
+        String response = String.fromCharCodes(data);
+        print('Received from server: $response');
+
+        // Handle login response from server
+        if (response.startsWith('LOGIN_SUCCESS')) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => MusicShopPage()),
+          );
+        } else if (response.startsWith('ERROR')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Login failed: $response')),
+          );
+        }
+      });
+    } catch (e) {
+      print('Error connecting to server: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to connect to server')),
+      );
+    }
   }
 
   void _handleLogin() {
     String email = _emailController.text;
     String password = _passwordController.text;
 
-    // Call login method with email and password
-    AuthService().login(email, password);
+    // Send login request to server
+    String loginMessage = 'LOGIN;$email;$password';
+    _socket.write(loginMessage);
 
-    AuthService().onEvent('login_response', (data) {
-      if (data['status'] == 'success') {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => MusicShopPage()),
-        );
-      } else {
-        // Display error message if login fails
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login failed: ${data['message']}')),
-        );
-      }
-    });
+    // You could also listen for responses from the server, but it's already handled in the listener.
   }
 
   @override
   void dispose() {
-    AuthService().disconnect(); // Disconnect WebSocket when leaving the page
+    _socket.close(); // Close the socket connection when leaving the page
     super.dispose();
   }
 
