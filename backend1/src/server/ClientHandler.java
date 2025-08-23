@@ -1,8 +1,11 @@
 package backend.server;
 
-import backend.services.AuthService;
+import backend.services.ShopService;
+import backend.services.DownloadService;
+import backend.services.CommentService;
 import backend.protocol.MessageParser;
 import backend.protocol.Responses;
+import backend.protocol.Command;
 
 import java.io.*;
 import java.net.*;
@@ -12,11 +15,15 @@ public class ClientHandler implements Runnable {
     private BufferedReader in;
     private PrintWriter out;
 
-    private AuthService authService;
+    private ShopService shopService;
+    private DownloadService downloadService;
+    private CommentService commentService;
 
     public ClientHandler(Socket socket) {
         this.clientSocket = socket;
-        this.authService = new AuthService();
+        this.shopService = new ShopService();
+        this.downloadService = new DownloadService();
+        this.commentService = new CommentService();
     }
 
     @Override
@@ -43,21 +50,30 @@ public class ClientHandler implements Runnable {
     }
 
     private String processRequest(String message) {
-        String command = MessageParser.parseCommand(message).name();
+        Command command = MessageParser.parseCommand(message);
         String response = "";
 
         switch (command) {
-            case "REGISTER":
-                // داده‌ها از پیام استخراج می‌شود
-                String registerResponse = authService.registerUser("username", "password", "email");
-                response = registerResponse;
+            case REGISTER:
+                //  سرویس ثبت‌نام
                 break;
-
-            case "LOGIN":
-                String loginResponse = authService.loginUser("username", "password");
-                response = loginResponse;
+            case LOGIN:
+                //  سرویس ورود
                 break;
-
+            case GET_SONGS:
+                response = shopService.getAllSongs();
+                break;
+            case PURCHASE:
+                //  سرویس خرید آهنگ
+                break;
+            case DOWNLOAD_START:
+                //  سرویس دانلود
+                response = downloadService.downloadSong(1); // فرض می‌کنیم songId = 1 است
+                break;
+            case COMMENT:
+                //  سرویس ارسال نظر
+                response = commentService.addComment(1, "user", "Great song!");
+                break;
             default:
                 response = Responses.errorResponse("Unknown command");
                 break;
