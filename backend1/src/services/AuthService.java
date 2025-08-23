@@ -1,44 +1,26 @@
 package backend.services;
 
-import backend.dao.UserDao;
+import backend.filedb.UserFileStore;
+import backend.models.UserSnapshot;
 import backend.protocol.Responses;
-import backend.protocol.MessageParser;
-import backend.database.DatabaseManager;
-import java.sql.*;
 
 public class AuthService {
+    private final UserFileStore store = new UserFileStore();
 
-    private UserDao userDao;
-
-    public AuthService() {
-        this.userDao = new UserDao();
+    public String register(String username, String email, String password) {
+        if (store.exists(username)) return Responses.error("USERNAME_EXISTS");
+        boolean ok = store.createUser(username, email, password);
+        return ok ? Responses.ok("REGISTER_OK") : Responses.error("REGISTER_FAILED");
     }
 
-    // ثبت‌نام کاربر جدید
-    public String registerUser(String username, String password, String email) {
-        if (userDao.usernameExists(username)) {
-            return Responses.errorResponse("Username already exists.");
+    public String login(String login, String password) {
+        try {
+            boolean ok = store.verifyPassword(login, password);
+            if (!ok) return Responses.error("AUTH_FAILED");
+            UserSnapshot u = store.load(login);
+            return "LOGIN_OK;" + backend.util.JsonUtil.toJson(u);
+        } catch (Exception e) {
+            return Responses.error("SERVER_ERROR");
         }
-
-        if (userDao.emailExists(email)) {
-            return Responses.errorResponse("Email already exists.");
-        }
-
-        // ثبت اطلاعات در دیتابیس
-        userDao.addUser(username, password, email);
-        return Responses.successResponse("Registration successful.");
-    }
-
-    // ورود کاربر
-    public String loginUser(String usernameOrEmail, String password) {
-        if (!userDao.usernameExists(usernameOrEmail) && !userDao.emailExists(usernameOrEmail)) {
-            return Responses.errorResponse("User not found.");
-        }
-
-        if (!userDao.verifyPassword(usernameOrEmail, password)) {
-            return Responses.errorResponse("Incorrect password.");
-        }
-
-        return Responses.successResponse("Login successful.");
     }
 }
