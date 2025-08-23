@@ -1,24 +1,14 @@
 package backend.protocol;
 
-import com.google.gson.Gson;
+import backend.util.JsonUtil;
 
 public class MessageParser {
-
-    private static final Gson gson = new Gson();
-
-    // تجزیه پیام به دستور و payload
-    public static Command parseCommand(String message) {
-        String command = message.split(";")[0];
-        return Command.valueOf(command);
+    public static String[] split(String raw) {
+        int k = raw.indexOf(';');
+        if (k < 0) return new String[]{ raw, "" };
+        return new String[]{ raw.substring(0, k), raw.substring(k + 1) };
     }
-
-    // تجزیه JSON به شیء
-    public static <T> T parseJson(String json, Class<T> classOfT) {
-        return gson.fromJson(json, classOfT);
-    }
-
-    // ساخت پیام به صورت string
-    public static String toJson(Object obj) {
-        return gson.toJson(obj);
+    public static <T> T parse(String payload, Class<T> type) {
+        return JsonUtil.fromJson(payload == null ? "" : payload, type);
     }
 }

@@ -1,84 +1,76 @@
 package backend.server;
 
-import backend.services.ShopService;
-import backend.services.DownloadService;
-import backend.services.CommentService;
 import backend.protocol.MessageParser;
 import backend.protocol.Responses;
-import backend.protocol.Command;
+import backend.protocol.payloads.*;
+import backend.services.*;
 
 import java.io.*;
-import java.net.*;
+import java.net.Socket;
 
 public class ClientHandler implements Runnable {
-    private Socket clientSocket;
+    private final Socket clientSocket;
     private BufferedReader in;
     private PrintWriter out;
 
-    private ShopService shopService;
-    private DownloadService downloadService;
-    private CommentService commentService;
+    private final AuthService auth = new AuthService();
+    private final PaymentService payment = new PaymentService();
+    private final ShopService shop = new ShopService();
+    private final DownloadService download = new DownloadService();
 
-    public ClientHandler(Socket socket) {
-        this.clientSocket = socket;
-        this.shopService = new ShopService();
-        this.downloadService = new DownloadService();
-        this.commentService = new CommentService();
-    }
+    public ClientHandler(Socket socket) { this.clientSocket = socket; }
 
-    @Override
-    public void run() {
+    @Override public void run() {
         try {
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            out = new PrintWriter(clientSocket.getOutputStream(), true);
+            out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream())), true);
 
-            String message;
-            while ((message = in.readLine()) != null) {
-                System.out.println("Received: " + message);
-                String response = processRequest(message);
-                out.println(response);
+            String line;
+            while ((line = in.readLine()) != null) {
+                String[] parts = MessageParser.split(line);
+                String cmd = parts[0];
+                String payload = parts.length > 1 ? parts[1] : "";
+
+                switch (cmd) {
+                    case "REGISTER" -> {
+                        RegisterReq r = MessageParser.parse(payload, RegisterReq.class);
+                        if (r == null || r.username == null || r.password == null || r.email == null) {
+                            out.println(Responses.error("BAD_REQUEST")); break;
+                        }
+                        out.println(auth.register(r.username, r.email, r.password));
+                    }
+                    case "LOGIN" -> {
+                        LoginReq r = MessageParser.parse(payload, LoginReq.class);
+                        if (r == null || r.login == null || r.password == null) { out.println(Responses.error("BAD_REQUEST")); break; }
+                        out.println(auth.login(r.login, r.password));
+                    }
+                    case "TOPUP" -> {
+                        TopupReq r = MessageParser.parse(payload, TopupReq.class);
+                        if (r == null) { out.println(Responses.error("BAD_REQUEST")); break; }
+                        out.println(payment.topup(r.username, r.amount));
+                    }
+                    case "SUBSCRIBE" -> {
+                        SubscribeReq r = MessageParser.parse(payload, SubscribeReq.class);
+                        if (r == null) { out.println(Responses.error("BAD_REQUEST")); break; }
+                        out.println(payment.subscribe(r.username, r.plan));
+                    }
+                    case "PURCHASE" -> {
+                        PurchaseReq r = MessageParser.parse(payload, PurchaseReq.class);
+                        if (r == null) { out.println(Responses.error("BAD_REQUEST")); break; }
+                        out.println(shop.purchase(r.username, r.song_id));
+                    }
+                    case "DOWNLOAD_START" -> {
+                        DownloadStartReq r = MessageParser.parse(payload, DownloadStartReq.class);
+                        if (r == null) { out.println(Responses.error("BAD_REQUEST")); break; }
+                        download.sendSongChunks(out, r.song_id);
+                    }
+                    default -> out.println(Responses.error("UNKNOWN_COMMAND"));
+                }
             }
         } catch (IOException e) {
-            System.err.println("❌ Error handling client: " + e.getMessage());
+            System.err.println("Client error: " + e.getMessage());
         } finally {
-            try {
-                clientSocket.close();
-            } catch (IOException e) {
-                System.err.println("❌ Error closing client socket: " + e.getMessage());
-            }
+            try { clientSocket.close(); } catch (IOException ignored) {}
         }
-    }
-
-    private String processRequest(String message) {
-        Command command = MessageParser.parseCommand(message);
-        String response = "";
-
-        switch (command) {
-            case REGISTER:
-                //  سرویس ثبت‌نام
-                break;
-            case LOGIN:
-                //  سرویس ورود
-                break;
-            case GET_SONGS:
-                response = shopService.getAllSongs();
-                break;
-            case PURCHASE:
-                //  سرویس خرید آهنگ
-                break;
-            case DOWNLOAD_START:
-                //  سرویس دانلود
-                response = downloadService.downloadSong(1); // فرض می‌کنیم songId = 1 است
-                break;
-            case COMMENT:
-                //  سرویس ارسال نظر
-                response = commentService.addComment(1, "user", "Great song!");
-                break;
-            default:
-                response = Responses.errorResponse("Unknown command");
-                break;
-        }
-
-        return response;
     }
 }
