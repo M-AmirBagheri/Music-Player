@@ -1,5 +1,6 @@
 package backend.services;
 
+import backend.model.Song;
 import backend.dao.SongDao;
 import backend.protocol.Responses;
 import backend.util.Base64Util;

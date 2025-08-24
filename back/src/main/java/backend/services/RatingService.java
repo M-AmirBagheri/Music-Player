@@ -1,10 +1,11 @@
 package backend.services;
 
 import backend.dao.RatingDao;
-import backend.model.Rating;
 import backend.protocol.Responses;
+import backend.model.Rating;
 
 import java.util.List;
+
 
 public class RatingService {
 
@@ -14,12 +15,13 @@ public class RatingService {
         this.ratingDao = new RatingDao();
     }
 
-    // افزودن امتیاز جدید
-    public String addRating(int songId, String username, int rating) {
+    // متد برای افزودن امتیاز به آهنگ
+    public String rateSong(int songId, String username, int rating) {
         if (rating < 0 || rating > 5) {
             return Responses.error("INVALID_RATING");
         }
 
+        // بررسی و افزودن امتیاز برای آهنگ
         boolean success = ratingDao.addRating(songId, username, rating);
         if (success) {
             return Responses.success("RATING_ADDED");
@@ -28,7 +30,7 @@ public class RatingService {
         }
     }
 
-    // دریافت امتیاز میانگین برای آهنگ
+    // متد برای دریافت میانگین امتیاز یک آهنگ
     public String getAverageRating(int songId) {
         double averageRating = ratingDao.getAverageRating(songId);
         if (averageRating == 0.0) {
@@ -37,7 +39,7 @@ public class RatingService {
         return Responses.success("AVERAGE_RATING;" + averageRating);
     }
 
-    // دریافت تمامی امتیازها برای آهنگ
+    // متد برای دریافت لیست امتیازها برای یک آهنگ
     public String getRatingsForSong(int songId) {
         List<Rating> ratings = ratingDao.getRatingsForSong(songId);
         if (ratings.isEmpty()) {

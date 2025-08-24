@@ -9,7 +9,7 @@ public class Song {
     public boolean isFree;
     public int downloadCount;
     public String coverPath;
-    public String audioBase64; // اگر از TEXT/LONGTEXT استفاده می‌کنید
+    public String audioBase64; // این فیلد برای ذخیره داده‌های Base64
 
     public Song() {}
 }
