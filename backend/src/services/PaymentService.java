@@ -1,8 +1,8 @@
-package backend.src.services;
+package backend.services;
 
-import backend.src.filedb.UserFileStore;
-import backend.src.model.UserSnapshot;
-import backend.src.protocol.Responses;
+import backend.filedb.UserFileStore;
+import backend.model.UserSnapshot;
+import backend.protocol.Responses;
 
 import java.time.LocalDate;
 

@@ -1,4 +1,4 @@
-package backend.src.protocol.payloads;
+package backend.protocol.payloads;
 
 public class RatingReq {
     public int songId;

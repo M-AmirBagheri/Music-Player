@@ -1,4 +1,4 @@
-package backend.src.protocol.payloads;
+package backend.protocol.payloads;
 
 public class CommentReq {
     public int songId;

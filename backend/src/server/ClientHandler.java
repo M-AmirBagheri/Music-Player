@@ -1,14 +1,14 @@
-package backend.src.server;
+package backend.server;
 
-import backend.src.services.AuthService;
-import backend.src.services.ShopService;
-import backend.src.services.DownloadService;
-import backend.src.services.PaymentService;
-import backend.src.services.CommentService;
-import backend.src.services.RatingService;
-import backend.src.protocol.MessageParser;
-import backend.src.protocol.Responses;
-import backend.src.protocol.payloads.*;
+import backend.services.AuthService;
+import backend.services.ShopService;
+import backend.services.DownloadService;
+import backend.services.PaymentService;
+import backend.services.CommentService;
+import backend.services.RatingService;
+import backend.protocol.MessageParser;
+import backend.protocol.Responses;
+import backend.protocol.payloads.*;
 
 import java.io.*;
 import java.net.Socket;

@@ -1,4 +1,4 @@
-package backend.src.util;
+package backend.util;
 
 import org.mindrot.jbcrypt.BCrypt;
 

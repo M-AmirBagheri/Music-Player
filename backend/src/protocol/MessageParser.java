@@ -1,4 +1,4 @@
-package backend.src.protocol;
+package backend.protocol;
 
 import backend.util.JsonUtil;
 

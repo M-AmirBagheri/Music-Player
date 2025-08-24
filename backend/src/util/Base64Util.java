@@ -1,4 +1,4 @@
-package backend.src.util;
+package backend.util;
 
 public class Base64Util {
     public static String[] chunk(String base64, int chunkSize) {

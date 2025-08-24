@@ -1,4 +1,4 @@
-package backend.src.util;
+package backend.util;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

@@ -1,7 +1,7 @@
-package backend.src.dao;
+package backend.dao;
 
-import backend.src.database.DatabaseManager;
-import backend.src.model.Song;
+import backend.database.DatabaseManager;
+import backend.model.Song;
 
 import java.sql.*;
 import java.util.ArrayList;

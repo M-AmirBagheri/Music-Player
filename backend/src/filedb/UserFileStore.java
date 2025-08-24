@@ -1,6 +1,6 @@
-package backend.src.filedb;
+package backend.filedb;
 
-import backend.src.util.Passwords;
+import backend.util.Passwords;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;

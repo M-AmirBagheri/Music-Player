@@ -1,6 +1,6 @@
-package backend.src.dao;
+package backend.dao;
 
-import backend.src.database.DatabaseManager;
+import backend.database.DatabaseManager;
 import java.sql.*;
 
 public class UserDao {

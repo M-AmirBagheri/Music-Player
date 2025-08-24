@@ -1,4 +1,4 @@
-package backend.src.model;
+package backend.model;
 
 public class Song {
     public int id;

@@ -1,4 +1,4 @@
-package backend.src.protocol;
+package backend.protocol;
 
 public class Responses {
     public static String ok(String msg) { return "OK;" + msg; }

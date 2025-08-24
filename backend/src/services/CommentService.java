@@ -1,8 +1,8 @@
-package backend.src.services;
+package backend.services;
 
-import backend.src.dao.CommentDao;
-import backend.src.protocol.Responses;
-import backend.src.protocol.payloads.CommentReq;
+import backend.dao.CommentDao;
+import backend.protocol.Responses;
+import backend.protocol.payloads.CommentReq;
 
 public class CommentService {
 

@@ -1,4 +1,4 @@
-package backend.src.services;
+package backend.services;
 
 import backend.filedb.UserFileStore;
 import backend.protocol.Responses;

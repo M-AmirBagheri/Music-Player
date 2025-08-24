@@ -1,4 +1,4 @@
-package backend.src.protocol.payloads;
+package backend.protocol.payloads;
 
 public class RegisterReq {
     public String username;

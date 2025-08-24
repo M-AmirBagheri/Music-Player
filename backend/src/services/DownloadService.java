@@ -1,8 +1,8 @@
-package backend.src.services;
+package backend.services;
 
-import backend.src.dao.SongDao;
-import backend.src.protocol.Responses;
-import backend.src.util.Base64Util;
+import backend.dao.SongDao;
+import backend.protocol.Responses;
+import backend.util.Base64Util;
 
 import java.io.PrintWriter;
 
