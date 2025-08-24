@@ -30,8 +30,8 @@ public class CommentDao {
         }
     }
 
-    // دریافت تمامی نظرات یک آهنگ
-    public List<Comment> getCommentsForSong(int songId) {
+    // دریافت نظرات برای آهنگ
+    public List<Comment> getComments(int songId) {
         List<Comment> comments = new ArrayList<>();
         String sql = "SELECT username, comment_text FROM comments WHERE song_id = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -44,19 +44,5 @@ public class CommentDao {
             System.err.println("❌ Error getting comments for song: " + e.getMessage());
         }
         return comments;
-    }
-
-    // حذف یک نظر
-    public boolean deleteComment(int songId, String username) {
-        String sql = "DELETE FROM comments WHERE song_id = ? AND username = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, songId);
-            stmt.setString(2, username);
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            System.err.println("❌ Error deleting comment: " + e.getMessage());
-            return false;
-        }
     }
 }

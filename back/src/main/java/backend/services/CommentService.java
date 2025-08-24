@@ -2,7 +2,9 @@ package backend.services;
 
 import backend.dao.CommentDao;
 import backend.protocol.Responses;
-import backend.protocol.payloads.CommentReq;
+import backend.model.Comment;
+
+import java.util.List;
 
 public class CommentService {
 
@@ -12,9 +14,8 @@ public class CommentService {
         this.commentDao = new CommentDao();
     }
 
-    // ارسال نظر جدید
+    // افزودن نظر جدید
     public String addComment(int songId, String username, String commentText) {
-        // افزودن نظر به دیتابیس
         boolean success = commentDao.addComment(songId, username, commentText);
         if (success) {
             return Responses.success("COMMENT_ADDED");
@@ -23,12 +24,18 @@ public class CommentService {
         }
     }
 
-    // دریافت نظرات یک آهنگ
-    public String getComments(int songId) {
-        String comments = commentDao.getComments(songId);
-        if (comments == null || comments.isEmpty()) {
+    // دریافت نظرات برای یک آهنگ
+    public String getCommentsForSong(int songId) {
+        List<Comment> comments = commentDao.getComments(songId);
+        if (comments.isEmpty()) {
             return Responses.error("NO_COMMENTS_FOUND");
         }
-        return Responses.success("COMMENTS_LIST;"+comments);
+
+        StringBuilder sb = new StringBuilder("COMMENTS_LIST;");
+        for (Comment comment : comments) {
+            sb.append(comment.getUsername()).append(":").append(comment.getCommentText()).append(";");
+        }
+
+        return sb.toString();
     }
 }

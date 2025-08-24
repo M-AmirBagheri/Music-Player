@@ -1,10 +1,8 @@
 package backend.services;
 
 import backend.filedb.UserFileStore;
-import backend.protocol.Responses;
-import backend.protocol.payloads.RegisterReq;
-import backend.protocol.payloads.LoginReq;
 import backend.util.Passwords;
+import backend.protocol.Responses;
 
 public class AuthService {
 
@@ -30,12 +28,10 @@ public class AuthService {
     // ورود به سیستم
     public String login(String login, String password) {
         try {
-            // بررسی صحت نام کاربری یا ایمیل
             if (!store.exists(login)) {
                 return Responses.error("USER_NOT_FOUND");
             }
 
-            // تایید پسورد
             boolean isPasswordCorrect = store.verifyPassword(login, password);
             if (!isPasswordCorrect) {
                 return Responses.error("INVALID_PASSWORD");

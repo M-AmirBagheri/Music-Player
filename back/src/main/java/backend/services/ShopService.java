@@ -27,7 +27,7 @@ public class ShopService {
             }
 
             // بررسی اعتبار کاربر
-            double userCredit = store.load(username).credit;
+            double userCredit = store.load(username).getCredit();
             if (song.price > userCredit) {
                 return Responses.error("NOT_ENOUGH_CREDIT");
             }
