@@ -1,31 +1,42 @@
 package backend.src.services;
 
-import backend.src.dao.SongDao;
 import backend.src.filedb.UserFileStore;
-import backend.src.model.Song;
-import backend.src.model.UserSnapshot;
+import backend.src.dao.SongDao;
 import backend.src.protocol.Responses;
+import backend.src.models.Song;
 
 public class ShopService {
-    private final SongDao songDao = new SongDao();
-    private final UserFileStore store = new UserFileStore();
+    private final UserFileStore store;
+    private final SongDao songDao;
 
+    public ShopService() {
+        this.store = new UserFileStore();
+        this.songDao = new SongDao();
+    }
+
+    // خرید آهنگ
     public String purchase(String username, int songId) {
         try {
-            Song s = songDao.getSongById(songId);
-            if (s == null) return Responses.error("SONG_NOT_FOUND");
-            if (store.hasPurchased(username, songId)) return Responses.ok("ALREADY_OWNED");
+            // بررسی موجودیت آهنگ
+            Song song = songDao.getSongById(songId);
+            if (song == null) return Responses.error("SONG_NOT_FOUND");
 
-            UserSnapshot u = store.load(username);
-            if (u == null) return Responses.error("USER_NOT_FOUND");
-
-            boolean allowedFree = s.isFree || "premium".equalsIgnoreCase(u.subscriptionTier) || s.price <= 0.0;
-            if (!allowedFree) {
-                if (u.credit < s.price) return Responses.error("NOT_ENOUGH_CREDIT");
-                store.updateCredit(username, -s.price);
+            // بررسی خرید قبلی
+            if (store.hasPurchased(username, songId)) {
+                return Responses.success("ALREADY_OWNED");
             }
+
+            // بررسی اعتبار کاربر
+            double userCredit = store.load(username).credit;
+            if (song.price > userCredit) {
+                return Responses.error("NOT_ENOUGH_CREDIT");
+            }
+
+            // کسر اعتبار و ثبت خرید
+            store.updateCredit(username, -song.price);
             store.appendPurchase(username, songId);
-            return "PURCHASE_OK;" + backend.util.JsonUtil.toJson(store.load(username));
+            return Responses.success("PURCHASE_OK");
+
         } catch (Exception e) {
             return Responses.error("SERVER_ERROR");
         }

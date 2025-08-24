@@ -1,27 +1,38 @@
 package backend.src.services;
 
 import backend.src.dao.SongDao;
-import backend.src.model.Song;
+import backend.src.protocol.Responses;
 import backend.src.util.Base64Util;
-import backend.src.util.Config;
 
 import java.io.PrintWriter;
 
 public class DownloadService {
-    private final SongDao songDao = new SongDao();
 
+    private final SongDao songDao;
+
+    public DownloadService() {
+        this.songDao = new SongDao();
+    }
+
+    // ارسال آهنگ به صورت chunk
     public void sendSongChunks(PrintWriter out, int songId) {
-        Song s = songDao.getSongById(songId);
-        if (s == null || s.audioBase64 == null) {
-            out.println("ERROR;SONG_NOT_FOUND");
-            return;
+        try {
+            // دریافت آهنگ از دیتابیس
+            Song song = songDao.getSongById(songId);
+            if (song == null || song.audioBase64 == null) {
+                out.println(Responses.error("SONG_NOT_FOUND"));
+                return;
+            }
+
+            // تقسیم Base64 به chunkها
+            String[] chunks = Base64Util.chunk(song.audioBase64, 65536);
+            for (int i = 0; i < chunks.length; i++) {
+                out.println("CHUNK;{\"i\":" + i + ",\"data\":\"" + chunks[i] + "\"}");
+            }
+
+            out.println("DOWNLOAD_END;{\"song_id\":" + songId + "}");
+        } catch (Exception e) {
+            out.println(Responses.error("SERVER_ERROR"));
         }
-        int size = Config.getInt("CHUNK_SIZE", 65536);
-        String[] parts = Base64Util.chunk(s.audioBase64, size);
-        for (int i = 0; i < parts.length; i++) {
-            out.println("CHUNK;{\"i\":" + i + ",\"total\":" + parts.length + ",\"data\":\"" + parts[i] + "\"}");
-        }
-        songDao.incDownloadCount(songId);
-        out.println("DOWNLOAD_END;{\"song_id\":" + songId + "}");
     }
 }
