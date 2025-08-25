@@ -1,28 +1,39 @@
 package backend.dao;
 
 import backend.model.Song;
+
 import java.util.HashMap;
 import java.util.Map;
 
-/** DAO درون‌حافظه‌ای برای تست‌ها (بدون اتصال DB) */
 public class InMemorySongDao extends SongDao {
-
     private final Map<Integer, Song> store = new HashMap<>();
     private int seq = 1;
 
-    /** فقط برای تست: آهنگ می‌سازد و id برمی‌گرداند */
+    // موجود (نسخه با 5 پارامتر)
     public int addSongForTest(String title, String artist, double rating, double price, String coverPath) {
-        Song s = new Song();     // Song شما فیلدهای عمومی دارد
-        s.id = seq;
-        s.title = title;
-        s.artist = artist;
-        s.rating = rating;
-        s.price = price;
-        s.isFree = false;
-        s.downloadCount = 0;
-        s.coverPath = coverPath;
+        Song s = new Song();
+        s.setId(seq);
+        s.setTitle(title);
+        s.setArtist(artist);
+        s.setRating(rating);
+        s.setPrice(price);
+        s.setFree(false);
+        s.setDownloadCount(0);
+        s.setCoverPath(coverPath);
         store.put(seq, s);
         return seq++;
+    }
+
+    // ✅ اضافه کن: نسخه‌ای که خودِ Song را می‌گیرد
+    public int addSongForTest(Song s) {
+        if (s.getId() <= 0) {
+            s.setId(seq++);
+        } else {
+            // اگر از قبل id داشت، شمارنده را جلو ببریم که تداخل پیش نیاید
+            seq = Math.max(seq, s.getId() + 1);
+        }
+        store.put(s.getId(), s);
+        return s.getId();
     }
 
     @Override
@@ -34,7 +45,12 @@ public class InMemorySongDao extends SongDao {
     public boolean incDownloadCount(int id) {
         Song s = store.get(id);
         if (s == null) return false;
-        s.downloadCount++;
+        s.setDownloadCount(s.getDownloadCount() + 1);
         return true;
+    }
+
+    public void clear() {
+        store.clear();
+        seq = 1;
     }
 }

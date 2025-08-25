@@ -1,4 +1,3 @@
-// src/main/java/backend/services/DownloadService.java
 package backend.services;
 
 import backend.dao.SongDao;
@@ -11,9 +10,10 @@ public class DownloadService {
     private final SongDao songDao;
 
     public DownloadService() {
-        this.songDao = new SongDao();
+        this(new SongDao());
     }
-    // برای تست
+
+    // برای تست‌ها
     public DownloadService(SongDao songDao) {
         this.songDao = songDao;
     }
@@ -22,10 +22,16 @@ public class DownloadService {
         Song song = songDao.getSongById(songId);
         if (song == null || song.getAudioBase64() == null) {
             out.println(Responses.error("SONG_NOT_FOUND"));
+            out.flush(); // ⬅️ مهم
             return;
         }
-        // نمونهٔ ساده: کل فایل را در یک CHUNK می‌فرستیم
+
+        // ⬅️ پروتکل: از «;» استفاده کن نه «,» و در پایان flush کن
         out.println("CHUNK;" + song.getAudioBase64());
         out.println("DOWNLOAD_END");
+        out.flush(); // ⬅️ مهم
+
+        // اختیاری: شمارنده دانلود را بالا ببر
+        songDao.incDownloadCount(songId);
     }
 }

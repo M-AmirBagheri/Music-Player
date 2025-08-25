@@ -35,11 +35,11 @@ public class ShopService {
         if (snapshot == null) return Responses.error("USER_NOT_FOUND");
 
         double credit = snapshot.getCredit();
-        if (song.price > credit) {
+        if (song.getPrice() > credit) {
             return Responses.error("NOT_ENOUGH_CREDIT");
         }
 
-        boolean ok1 = store.updateCredit(username, -song.price);
+        boolean ok1 = store.updateCredit(username, -song.getPrice());
         boolean ok2 = store.appendPurchase(username, songId);
         if (!ok1 || !ok2) return Responses.error("SERVER_ERROR");
 
