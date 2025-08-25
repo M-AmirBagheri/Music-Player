@@ -28,4 +28,22 @@ public class PaymentService {
             return "USER;" + backend.util.JsonUtil.toJson(store.load(username));
         } catch (Exception e) { return Responses.error("SERVER_ERROR"); }
     }
+
+    // به‌روزرسانی اشتراک
+    public String setSubscription(String username, String plan, String expiry) {
+        // بارگذاری اطلاعات کاربر
+        UserSnapshot user = store.load(username);
+        if (user == null) {
+            return Responses.userNotFound();  // اگر کاربر وجود نداشته باشد
+        }
+
+        // به‌روزرسانی اطلاعات اشتراک
+        boolean success = store.setSubscription(username, plan, expiry);
+        if (success) {
+            return Responses.success("SUBSCRIPTION_SET");
+        } else {
+            return Responses.error("SUBSCRIPTION_FAILED");
+        }
+    }
+
 }

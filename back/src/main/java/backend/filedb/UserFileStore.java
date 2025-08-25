@@ -8,7 +8,7 @@ import java.nio.file.*;
 import java.util.*;
 
 public class UserFileStore {
-    private static final String ROOT = "data/users/";
+    private static final String ROOT = "D:/music_player_project/back/data/users/";
 
     private static File fileOf(String username) {
         return new File(ROOT + username + ".txt");
@@ -102,8 +102,11 @@ public class UserFileStore {
                     userSnapshot.setSubscriptionExpiry(line.split("=")[1]);
                 } else if (line.startsWith("purchased=")) {
                     String[] purchasedSongs = line.split("=")[1].split(",");
+                    // بررسی اینکه آرایه خریداری‌شده خالی نباشد
                     for (String songId : purchasedSongs) {
-                        userSnapshot.addPurchasedSong(Integer.parseInt(songId));
+                        if (!songId.isEmpty()) {
+                            userSnapshot.addPurchasedSong(Integer.parseInt(songId));
+                        }
                     }
                 }
             }
