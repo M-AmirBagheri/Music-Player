@@ -1,0 +1,6 @@
+password=null
+email=null
+credit=5.0
+subscription_tier=none
+subscription_expiry=
+purchased=

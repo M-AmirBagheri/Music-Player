@@ -1,41 +1,48 @@
 package backend.services;
 
+import backend.dao.SongDao;
 import backend.filedb.UserFileStore;
 import backend.model.Song;
-import backend.dao.SongDao;
-import backend.model.UserSnapshot;
 import backend.protocol.Responses;
 
 public class ShopService {
 
-    private UserFileStore userStore = new UserFileStore();  // مقداردهی صحیح
-    private SongDao songDao = new SongDao();  // مقداردهی صحیح
+    private final UserFileStore store;
+    private final SongDao songDao;
 
+    /** سازنده پیش‌فرض برای اجرای عادی برنامه */
+    public ShopService() {
+        this(new UserFileStore(), new SongDao());
+    }
+
+    /** سازنده مخصوص تست: وابستگی‌ها را از بیرون تزریق می‌کنیم */
+    public ShopService(UserFileStore store, SongDao songDao) {
+        this.store = store;
+        this.songDao = songDao;
+    }
+
+    /** خرید آهنگ */
     public String purchase(String username, int songId) {
-        Song song = songDao.getSongById(songId);  // گرفتن اطلاعات آهنگ از DAO
-        if (song == null) {
-            return Responses.error("SONG_NOT_FOUND");
+        Song song = songDao.getSongById(songId);
+        if (song == null) return Responses.error("SONG_NOT_FOUND");
+
+        if (store.hasPurchased(username, songId)) {
+            // اگر قبلاً خریده، خروجی را طبق قراردادی که گذاشتیم برگردان
+            return Responses.success("ALREADY_OWNED");
         }
 
-        // بارگذاری اطلاعات کاربر
-        UserSnapshot user = userStore.load(username);
-        if (user == null) {
-            return Responses.error("USER_NOT_FOUND");
-        }
+        var snapshot = store.load(username);
+        if (snapshot == null) return Responses.error("USER_NOT_FOUND");
 
-        // بررسی اینکه کاربر قبلاً آهنگ را خریداری کرده است
-        if (user.hasPurchased(songId)) {
-            return Responses.error("ALREADY_OWNED");
-        }
-
-        // بررسی اعتبار کاربر
-        if (user.getCredit() < song.getPrice()) {
+        double credit = snapshot.getCredit();
+        if (song.price > credit) {
             return Responses.error("NOT_ENOUGH_CREDIT");
         }
 
-        // خرید آهنگ
-        userStore.updateCredit(username, -song.getPrice());
-        userStore.appendPurchase(username, songId);
+        boolean ok1 = store.updateCredit(username, -song.price);
+        boolean ok2 = store.appendPurchase(username, songId);
+        if (!ok1 || !ok2) return Responses.error("SERVER_ERROR");
+
         return Responses.success("PURCHASE_OK");
     }
 }
