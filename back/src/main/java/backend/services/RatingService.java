@@ -1,56 +1,84 @@
 package backend.services;
 
 import backend.dao.RatingDao;
-import backend.protocol.Responses;
+import backend.dao.SongDao;
 import backend.model.Rating;
+import backend.model.Song;
+import backend.protocol.Responses;
+import backend.util.JsonUtil;
 
 import java.util.List;
-
 
 public class RatingService {
 
     private final RatingDao ratingDao;
+    // اختیاری: برای تست/اعتبارسنجی وجود آهنگ
+    private final SongDao songDao;
 
+    /** اجرای عادی برنامه (اعتبارسنجی وجود آهنگ هم انجام می‌شود) */
     public RatingService() {
-        this.ratingDao = new RatingDao();
+        this(new SongDao(), new RatingDao());
     }
 
-    // متد برای افزودن امتیاز به آهنگ
+    /** فقط با RatingDao (اگر نخواستی وجود آهنگ را چک کنی) */
+    public RatingService(RatingDao ratingDao) {
+        this.ratingDao = ratingDao;
+        this.songDao = null;
+    }
+
+    /** تزریق کامل برای تست/DI */
+    public RatingService(SongDao songDao, RatingDao ratingDao) {
+        this.songDao = songDao;
+        this.ratingDao = ratingDao;
+    }
+
+    /** ثبت/به‌روزرسانی امتیاز یک کاربر برای یک آهنگ */
     public String rateSong(int songId, String username, int rating) {
-        if (rating < 0 || rating > 5) {
+        // 1..5
+        if (rating < 1 || rating > 5) {
             return Responses.error("INVALID_RATING");
         }
 
-        // بررسی و افزودن امتیاز برای آهنگ
-        boolean success = ratingDao.addRating(songId, username, rating);
-        if (success) {
-            return Responses.success("RATING_ADDED");
-        } else {
-            return Responses.error("RATING_FAILED");
+        // اگر SongDao داریم، وجود آهنگ را چک کن
+        if (songDao != null) {
+            Song s = songDao.getSongById(songId);
+            if (s == null) return Responses.error("SONG_NOT_FOUND");
         }
+
+        boolean ok = ratingDao.addRating(songId, username, rating); // یا upsert
+        return ok ? Responses.success("RATING_ADDED")
+                : Responses.error("RATING_FAILED");
     }
 
-    // متد برای دریافت میانگین امتیاز یک آهنگ
+    /** میانگین امتیاز یک آهنگ */
     public String getAverageRating(int songId) {
-        double averageRating = ratingDao.getAverageRating(songId);
-        if (averageRating == 0.0) {
-            return Responses.error("NO_RATINGS_FOUND");
+        // اگر SongDao داریم، وجود آهنگ را چک کن (اختیاری)
+        if (songDao != null) {
+            Song s = songDao.getSongById(songId);
+            if (s == null) return Responses.error("SONG_NOT_FOUND");
         }
-        return Responses.success("AVERAGE_RATING;" + averageRating);
+
+        double avg = ratingDao.getAverageRating(songId);
+        // وقتی هنوز امتیازی ثبت نشده
+        if (avg <= 0.0) return Responses.error("NO_RATINGS_FOUND");
+
+        // SUCCESS;AVERAGE_RATING;<value>
+        return Responses.success("AVERAGE_RATING;" + avg);
     }
 
-    // متد برای دریافت لیست امتیازها برای یک آهنگ
+    /** لیست امتیازهای یک آهنگ (JSON) */
     public String getRatingsForSong(int songId) {
+        if (songDao != null) {
+            Song s = songDao.getSongById(songId);
+            if (s == null) return Responses.error("SONG_NOT_FOUND");
+        }
+
         List<Rating> ratings = ratingDao.getRatingsForSong(songId);
-        if (ratings.isEmpty()) {
+        if (ratings == null || ratings.isEmpty()) {
             return Responses.error("NO_RATINGS_FOUND");
         }
 
-        StringBuilder sb = new StringBuilder("RATINGS_LIST;");
-        for (Rating rating : ratings) {
-            sb.append(rating.getUsername()).append(":").append(rating.getRating()).append(";");
-        }
-
-        return sb.toString();
+        // SUCCESS;RATINGS;<json-array>
+        return Responses.success("RATINGS;" + JsonUtil.toJson(ratings));
     }
 }
