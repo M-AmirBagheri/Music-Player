@@ -95,17 +95,28 @@ public class UserFileStore {
 
             while ((line = reader.readLine()) != null) {
                 if (line.startsWith("credit=")) {
-                    userSnapshot.setCredit(Double.parseDouble(line.split("=")[1]));
+                    String[] parts = line.split("=", 2);
+                    if (parts.length > 1 && !parts[1].isEmpty()) {
+                        userSnapshot.setCredit(Double.parseDouble(parts[1]));
+                    }
                 } else if (line.startsWith("subscription_tier=")) {
-                    userSnapshot.setSubscriptionTier(line.split("=")[1]);
+                    String[] parts = line.split("=", 2);
+                    if (parts.length > 1) {
+                        userSnapshot.setSubscriptionTier(parts[1]);
+                    }
                 } else if (line.startsWith("subscription_expiry=")) {
-                    userSnapshot.setSubscriptionExpiry(line.split("=")[1]);
+                    String[] parts = line.split("=", 2);
+                    if (parts.length > 1) {
+                        userSnapshot.setSubscriptionExpiry(parts[1]);
+                    }
                 } else if (line.startsWith("purchased=")) {
-                    String[] purchasedSongs = line.split("=")[1].split(",");
-                    // بررسی اینکه آرایه خریداری‌شده خالی نباشد
-                    for (String songId : purchasedSongs) {
-                        if (!songId.isEmpty()) {
-                            userSnapshot.addPurchasedSong(Integer.parseInt(songId));
+                    String[] parts = line.split("=", 2);
+                    if (parts.length > 1 && !parts[1].isEmpty()) {
+                        String[] purchasedSongs = parts[1].split(",");
+                        for (String songId : purchasedSongs) {
+                            if (!songId.isEmpty()) {
+                                userSnapshot.addPurchasedSong(Integer.parseInt(songId));
+                            }
                         }
                     }
                 }

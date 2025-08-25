@@ -1,6 +1,6 @@
-password=$2a$10$QQGAmoRwKg4fNWvEW8djdekAVc76FAM0btFfDPoPcUM0AkhZflF5i
-email=test@example.com
-credit=0.0
-subscription_tier=none
-subscription_expiry=
+password=null
+email=null
+credit=-200.0
+subscription_tier=premium
+subscription_expiry=2025-12-31
 purchased=
