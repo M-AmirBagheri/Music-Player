@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class UserSnapshot {
+
     private String username;
     private String email;
     private String password;
@@ -27,9 +28,7 @@ public class UserSnapshot {
     }
 
     // گتر و ستر برای credit (برای دسترسی به credit)
-    public double getCredit() {
-        return credit;
-    }
+
 
     public void setCredit(double credit) {
         this.credit = credit;
@@ -62,6 +61,10 @@ public class UserSnapshot {
         purchasedSongs.add(songId);
     }
 
+    public boolean hasPurchased(int songId) {
+        return purchasedSongs.contains(songId);
+    }
+
     // گتر و ستر برای password
     public String getPassword() {
         return password;
@@ -78,5 +81,22 @@ public class UserSnapshot {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public double getCredit() {
+        return credit;
+    }
+
+
+    @Override
+    public String toString() {
+        return "UserSnapshot{" +
+                "username='" + username + '\'' +
+                ", email='" + email + '\'' +
+                ", credit=" + credit +
+                ", subscriptionTier='" + subscriptionTier + '\'' +
+                ", subscriptionExpiry='" + subscriptionExpiry + '\'' +
+                ", purchasedSongs=" + purchasedSongs +
+                '}';
     }
 }

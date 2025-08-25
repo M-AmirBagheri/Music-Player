@@ -12,4 +12,9 @@ public class Song {
     public String audioBase64; // این فیلد برای ذخیره داده‌های Base64
 
     public Song() {}
+
+    public double getPrice() {
+        return price;
+    }
+
 }
